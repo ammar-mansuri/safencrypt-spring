@@ -1,0 +1,10 @@
+Crypto-Config:
+  Symmetric-Encryption:
+    Default-Algo: AES_CBC_256_PKCS5Padding
+    Algorithms:
+      - AES_CBC_128_PKCS5Padding
+      - AES_CBC_192_PKCS5Padding
+      - AES_CBC_256_PKCS5Padding
+      - AES_GCM_256_PKCS5Padding
+
+    
