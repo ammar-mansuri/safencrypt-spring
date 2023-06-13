@@ -1,8 +1,8 @@
 package com.wrapper.symmetric.utils;
 
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricEncryption;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
+import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 
 import java.util.Base64;
 
@@ -35,12 +35,13 @@ public class Utility {
         return symmetricAlgorithm.getLabel().split("_")[3];
     }
 
-    public static SymmetricEncryptionBase64 getEncodedResult(final SymmetricEncryption symmetricEncryption) {
+    public static SymmetricEncryptionBase64 getEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
         return new SymmetricEncryptionBase64(
-                Base64.getEncoder().encodeToString(symmetricEncryption.iv()),
-                Base64.getEncoder().encodeToString(symmetricEncryption.key()),
-                Base64.getEncoder().encodeToString(symmetricEncryption.ciphertext()),
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.key()),
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.ciphertext()),
                 null,
-                symmetricEncryption.symmetricAlgorithm());
+                symmetricEncryptionResult.symmetricAlgorithm());
     }
+    
 }

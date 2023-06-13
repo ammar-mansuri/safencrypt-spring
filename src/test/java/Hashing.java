@@ -76,6 +76,7 @@ public class Hashing {
     public void testTinkSymmetric() throws GeneralSecurityException {
 
         AeadConfig.register();
+        
         KeysetHandle keysetHandle = KeysetHandle.generateNew(KeyTemplates.get("AES128_GCM"));
 
         Aead aead = keysetHandle.getPrimitive(Aead.class);
