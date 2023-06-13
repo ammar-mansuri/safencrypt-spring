@@ -4,6 +4,7 @@ import com.wrapper.Application;
 import com.wrapper.symmetric.config.SymmetricEncryptionConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
+import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.service.SymmetricEncryption;
 import com.wrapper.symmetric.utils.Utility;
@@ -16,6 +17,9 @@ import javax.crypto.AEADBadTagException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import static com.wrapper.symmetric.utils.Utility.getEncodedResult;
 
 
 @SpringBootTest(classes = {Application.class})
@@ -188,12 +192,7 @@ public class SymmetricWrapperTest {
     }
 
 
-
-
-
-
-
-   /* @Test
+    @Test
     public void encryptForPython() throws Exception {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_256_PKCS5Padding;
@@ -202,18 +201,13 @@ public class SymmetricWrapperTest {
         kg.init(Utility.getAlgorithmBytes(symmetricAlgorithm));
         SecretKey secretKey = kg.generateKey();
 
-        byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
+        byte[] plainText = "Hello World JCA WRAPPER Encrypt For Python".getBytes(StandardCharsets.UTF_8);
 
 
-        SymmetricEncryptionResultGCM symmetricEncryptionResult = symmetricWrapperGCM.encrypt(SymmetricAlgorithm.AES_GCM_256_NoPadding, secretKey, plainText, null);
-
-
-//        byte[] ciphertextBytes;
-//        byte[] tagBytes;
-//        byte[] ciphertextTagBytes = new byte[symmetricEncryptionResult.ciphertext().length];
-//        System.arraycopy(ciphertextBytes, 0, ciphertextTagBytes, 0, ciphertextBytes.length);
-//        System.arraycopy(tagBytes, 0, ciphertextTagBytes, ciphertextBytes.length, tagBytes.length);
-
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryption.createEncryptionBuilder(SymmetricAlgorithm.AES_GCM_256_NoPadding)
+                .key(secretKey)
+                .plaintext(plainText)
+                .encrypt();
 
         SymmetricEncryptionBase64 symmetricEncryptionBase64 = getEncodedResult(symmetricEncryptionResult);
 
@@ -225,24 +219,23 @@ public class SymmetricWrapperTest {
     }
 
     @Test
-    public void decryptForPython() throws Exception {
+    public void decryptFromPython() {
 
-        byte[] ciphertextBytes = Base64.getDecoder().decode("YIet5Qm5pVAp0OE=".getBytes());
-        byte[] tagBytes = Base64.getDecoder().decode("domWmLMuCSt6y0XXrfNCzA==".getBytes());
+        byte[] ciphertextBytes = Base64.getDecoder().decode("lJipwcZuQ+0no1s=".getBytes());
+        byte[] tagBytes = Base64.getDecoder().decode("ypgsDoaFKGj06ljQ".getBytes());
         byte[] ciphertextTagBytes = new byte[ciphertextBytes.length + tagBytes.length];
         System.arraycopy(ciphertextBytes, 0, ciphertextTagBytes, 0, ciphertextBytes.length);
         System.arraycopy(tagBytes, 0, ciphertextTagBytes, ciphertextBytes.length, tagBytes.length);
 
-
-        SymmetricEncryptionResultGCM symmetricEncryption = new SymmetricEncryptionResultGCM(Base64.getDecoder().decode("T0IAEhGf5MwKcK6V".getBytes()),
-                Base64.getDecoder().decode("KaYzQ+Rhcoapa9KSqwaV9w==".getBytes()),
+        SymmetricEncryptionResult symmetricEncryptionResult = new SymmetricEncryptionResult(Base64.getDecoder().decode("MXA8iL1gvl6i7Qx6".getBytes()),
+                Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()),
                 ciphertextTagBytes,
-                null,
-                SymmetricAlgorithm.DEFAULT);
+                SymmetricAlgorithm.AES_GCM_128_NoPadding);
 
-        SymmetricDecryptionResult symmetricDecryptionResult = symmetricWrapperGCM.decrypt(symmetricEncryption);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryption.createDecryptionBuilder()
+                .decrypt(symmetricEncryptionResult);
 
         Assertions.assertEquals("Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
 
-    }*/
+    }
 }
