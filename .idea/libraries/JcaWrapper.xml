@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="JcaWrapper">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../NewJCA/out/artifacts/JcaWrapper_jar/JcaWrapper.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
