@@ -1,9 +1,11 @@
 package com.wrapper.symmetric.service;
 
+import com.wrapper.symmetric.config.SymmetricEncryptionConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.utils.Utility;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
@@ -16,8 +18,10 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 @Service
+@NoArgsConstructor
 public class SymmetricWrapper {
 
+    private SymmetricEncryptionConfig symmetricEncryptionConfig;
 
     private Cipher cipher;
 
@@ -29,6 +33,8 @@ public class SymmetricWrapper {
 
 
     protected SymmetricEncryptionResult encrypt(SymmetricEncryption symmetricEncryption) throws Exception {
+
+        isAlgorithmSecure(symmetricEncryption.getSymmetricAlgorithm());
 
         SecretKey secretKey = symmetricEncryption.getKey();
 
@@ -149,6 +155,10 @@ public class SymmetricWrapper {
         random.nextBytes(nonce);
         IvParameterSpec ivSpec = new IvParameterSpec(nonce);
         return ivSpec;
+    }
+
+    public boolean isAlgorithmSecure(SymmetricAlgorithm symmetricAlgorithm) {
+        return true;
     }
 
 

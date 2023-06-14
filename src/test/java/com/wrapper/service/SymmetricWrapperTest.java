@@ -1,6 +1,7 @@
 package com.wrapper.service;
 
 import com.wrapper.Application;
+import com.wrapper.symmetric.config.InteroperabilitySymmetricEncryptionConfig;
 import com.wrapper.symmetric.config.SymmetricEncryptionConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
@@ -29,6 +30,8 @@ public class SymmetricWrapperTest {
     @Autowired
     private SymmetricEncryptionConfig symmetricEncryptionConfig;
 
+    @Autowired
+    private InteroperabilitySymmetricEncryptionConfig interoperabilitySymmetricEncryptionConfig;
 
     @Test
     public void testSymmetricEncryptionUsingAllDefaults() throws Exception {

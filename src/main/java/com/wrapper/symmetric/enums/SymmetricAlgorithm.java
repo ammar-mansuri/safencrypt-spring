@@ -3,7 +3,10 @@ package com.wrapper.symmetric.enums;
 
 import java.util.Arrays;
 
-//@Component
+
+/**
+ * List of Currently Supported Cryptographic Algorithms
+ */
 public enum SymmetricAlgorithm {
 
     AES_CBC_128_PKCS5Padding("AES_CBC_128_PKCS5Padding"),

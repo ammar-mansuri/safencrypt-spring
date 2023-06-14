@@ -4,20 +4,22 @@ import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import lombok.SneakyThrows;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 
+@Component
 public class SymmetricEncryption {
 
     private SymmetricAlgorithm symmetricAlgorithm;
     private SecretKey key;
     private byte[] plaintext;
-    //    private byte[] ciphertext;
     private byte[] associatedData;
 
     private static SymmetricEncryption encryption;
 
     private SymmetricWrapper symmetricWrapper;
+
 
     private SymmetricEncryption() {
         // private constructor to enforce the use of builder pattern

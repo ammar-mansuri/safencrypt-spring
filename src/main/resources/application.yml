@@ -1,4 +1,6 @@
 Crypto-Config:
+
+  # List of Symmetric Algorithms currently considered as Secure
   Symmetric-Encryption:
     Default-Algo: AES_CBC_256_PKCS5Padding
     Algorithms:
@@ -9,8 +11,17 @@ Crypto-Config:
       - AES_GCM_192_PKCS5Padding
       - AES_GCM_256_PKCS5Padding
 
+  #    Pick Enum and validate against this config file
 
 
 
-
-#    Pick Enum and validate against this config file
+  Interoperability:
+    Languages:
+      C-Sharp#:
+        Library-Provider: Microsoft
+        Symmetric:
+          Default-Algo: AES_CBC_128_PKCS7Padding
+          Encoding: UTF-8
+          Key-Bytes: 16
+          IV-Bytes: 16
+          Resultant: BASE-64
