@@ -3,27 +3,38 @@ package com.wrapper.symmetric.service;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 
 @Component
-public class SymmetricEncryption {
+public class SymmetricEncryptionBuilder {
 
     private SymmetricAlgorithm symmetricAlgorithm;
     private SecretKey key;
     private byte[] plaintext;
     private byte[] associatedData;
 
-    private static SymmetricEncryption encryption;
+    private static SymmetricEncryptionBuilder encryption;
 
     private SymmetricWrapper symmetricWrapper;
 
-
-    private SymmetricEncryption() {
+    private SymmetricEncryptionBuilder() {
         // private constructor to enforce the use of builder pattern
-        this.symmetricWrapper = new SymmetricWrapper();
+    }
+
+    @Autowired
+    private SymmetricEncryptionBuilder(SymmetricWrapper symmetricWrapper) {
+        encryption = new SymmetricEncryptionBuilder();
+        this.symmetricWrapper = symmetricWrapper;
+    }
+
+    @PostConstruct
+    public void init() {
+        encryption.symmetricWrapper = symmetricWrapper;
     }
 
     public SymmetricAlgorithm getSymmetricAlgorithm() {
@@ -43,23 +54,25 @@ public class SymmetricEncryption {
     }
 
     public static KeyBuilder createEncryptionBuilder() {
-        return new KeyBuilder(SymmetricAlgorithm.DEFAULT);
+        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
+        return new KeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
     public static KeyBuilder createEncryptionBuilder(SymmetricAlgorithm symmetricAlgorithm) {
-        return new KeyBuilder(symmetricAlgorithm);
+        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
+        return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static CiphertextBuilder createDecryptionBuilder() {
-        encryption = new SymmetricEncryption();
+        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
         return new CiphertextBuilder(encryption);
     }
 
     public static class KeyBuilder {
-        private SymmetricEncryption encryption;
+        private SymmetricEncryptionBuilder encryption;
 
-        private KeyBuilder(SymmetricAlgorithm symmetricAlgorithm) {
-            encryption = new SymmetricEncryption();
+        private KeyBuilder(SymmetricEncryptionBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+            this.encryption = encryption;
             encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
 
@@ -75,9 +88,9 @@ public class SymmetricEncryption {
     }
 
     public static class PlaintextBuilder {
-        private SymmetricEncryption encryption;
+        private SymmetricEncryptionBuilder encryption;
 
-        private PlaintextBuilder(SymmetricEncryption encryption) {
+        private PlaintextBuilder(SymmetricEncryptionBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -99,9 +112,9 @@ public class SymmetricEncryption {
 
 
     public static class CiphertextBuilder {
-        private SymmetricEncryption encryption;
+        private SymmetricEncryptionBuilder encryption;
 
-        private CiphertextBuilder(SymmetricEncryption encryption) {
+        private CiphertextBuilder(SymmetricEncryptionBuilder encryption) {
             this.encryption = encryption;
         }
 

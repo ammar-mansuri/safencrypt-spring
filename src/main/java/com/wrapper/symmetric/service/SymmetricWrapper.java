@@ -1,11 +1,13 @@
 package com.wrapper.symmetric.service;
 
+import com.wrapper.symmetric.config.InteroperabilitySymmetricEncryptionConfig;
 import com.wrapper.symmetric.config.SymmetricEncryptionConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.utils.Utility;
-import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
@@ -15,88 +17,67 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.Random;
 
 @Service
-@NoArgsConstructor
 public class SymmetricWrapper {
-
-    private SymmetricEncryptionConfig symmetricEncryptionConfig;
-
-    private Cipher cipher;
-
-    private Random random;
 
     private final int GCM_TAG_LENGTH = 96;
     private final int GCM_IV_SIZE = 12;
     private final int REST_IV_SIZE = 16;
 
 
-    protected SymmetricEncryptionResult encrypt(SymmetricEncryption symmetricEncryption) throws Exception {
+    private InteroperabilitySymmetricEncryptionConfig interoperabilitySymmetricEncryptionConfig;
+    private SymmetricEncryptionConfig symmetricEncryptionConfig;
 
-        isAlgorithmSecure(symmetricEncryption.getSymmetricAlgorithm());
+    @Autowired
+    public SymmetricWrapper(SymmetricEncryptionConfig symmetricEncryptionConfig, InteroperabilitySymmetricEncryptionConfig interoperabilitySymmetricEncryptionConfig) {
+        this.symmetricEncryptionConfig = symmetricEncryptionConfig;
+        this.interoperabilitySymmetricEncryptionConfig = interoperabilitySymmetricEncryptionConfig;
+    }
 
-        SecretKey secretKey = symmetricEncryption.getKey();
+    @SneakyThrows
+    protected SymmetricEncryptionResult encrypt(SymmetricEncryptionBuilder symmetricEncryptionBuilder) {
 
-        if (!isKeyDefined(symmetricEncryption)) {
+        if (!isAlgorithmSecure(symmetricEncryptionBuilder.getSymmetricAlgorithm())) {
+            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionBuilder.getSymmetricAlgorithm().getLabel()));
+        }
 
-            KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricEncryption.getSymmetricAlgorithm()));
-            kg.init(Utility.getAlgorithmBytes(symmetricEncryption.getSymmetricAlgorithm()));
+        SecretKey secretKey = symmetricEncryptionBuilder.getKey();
+
+        if (!isKeyDefined(symmetricEncryptionBuilder)) {
+
+            KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricEncryptionBuilder.getSymmetricAlgorithm()));
+            kg.init(Utility.getAlgorithmBytes(symmetricEncryptionBuilder.getSymmetricAlgorithm()));
             secretKey = kg.generateKey();
         }
 
-        if (isGCM(symmetricEncryption.getSymmetricAlgorithm())) {
-            return encryptWithGCM(symmetricEncryption.getSymmetricAlgorithm(), secretKey, symmetricEncryption.getPlaintext(), symmetricEncryption.getAssociatedData());
+        if (isGCM(symmetricEncryptionBuilder.getSymmetricAlgorithm())) {
+            return encryptWithGCM(symmetricEncryptionBuilder.getSymmetricAlgorithm(), secretKey, symmetricEncryptionBuilder.getPlaintext(), symmetricEncryptionBuilder.getAssociatedData());
         }
 
-        return encrypt(symmetricEncryption.getSymmetricAlgorithm(), secretKey, symmetricEncryption.getPlaintext());
+        return encrypt(symmetricEncryptionBuilder.getSymmetricAlgorithm(), secretKey, symmetricEncryptionBuilder.getPlaintext());
     }
 
 
-    /**
-     * Encryption with default iv
-     *
-     * @param symmetricAlgorithm
-     * @param secretKey
-     * @param plaintext
-     * @return
-     * @throws Exception
-     */
     private SymmetricEncryptionResult encrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) throws Exception {
 
-        cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
+        final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
 
         final IvParameterSpec ivSpec = generateIvRest();
 
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
-        byte[] ciphertext = cipher.doFinal(plaintext);
+        final byte[] ciphertext = cipher.doFinal(plaintext);
 
         return new SymmetricEncryptionResult(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
     }
 
 
-    protected SymmetricDecryptionResult decrypt(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) throws Exception {
-
-        if (isGCM(symmetricEncryptionResult.symmetricAlgorithm())) {
-            return decryptWithGCM(symmetricEncryptionResult, associatedData);
-        }
-
-        cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
-
-        SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), Utility.getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
-
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(symmetricEncryptionResult.iv()));
-
-        byte[] plaintext = cipher.doFinal(symmetricEncryptionResult.ciphertext());
-
-        return new SymmetricDecryptionResult(plaintext, symmetricEncryptionResult.symmetricAlgorithm());
-    }
-
-
     private SymmetricEncryptionResult encryptWithGCM(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) throws Exception {
 
-        cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
+        final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
 
         final IvParameterSpec ivSpec = generateNonceGCM();
 
@@ -106,16 +87,39 @@ public class SymmetricWrapper {
             cipher.updateAAD(associatedData);
         }
 
-        byte[] ciphertext = cipher.doFinal(plaintext);
+        final byte[] ciphertext = cipher.doFinal(plaintext);
 
         return new SymmetricEncryptionResult(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
     }
 
+    @SneakyThrows
+    protected SymmetricDecryptionResult decrypt(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) {
+
+        if (!isAlgorithmSecure(symmetricEncryptionResult.symmetricAlgorithm())) {
+            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionResult.symmetricAlgorithm().getLabel()));
+        }
+
+        return isGCM(symmetricEncryptionResult.symmetricAlgorithm()) ? decryptWithGCM(symmetricEncryptionResult, associatedData) : decryptRest(symmetricEncryptionResult);
+    }
+
+    private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionResult symmetricEncryptionResult) throws Exception {
+
+        final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
+
+        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), Utility.getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
+
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(symmetricEncryptionResult.iv()));
+
+        final byte[] plaintext = cipher.doFinal(symmetricEncryptionResult.ciphertext());
+
+        return new SymmetricDecryptionResult(plaintext, symmetricEncryptionResult.symmetricAlgorithm());
+    }
+
     private SymmetricDecryptionResult decryptWithGCM(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) throws Exception {
 
-        cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
+        final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
 
-        SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), Utility.getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
+        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), Utility.getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
 
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH, symmetricEncryptionResult.iv()));
 
@@ -123,7 +127,7 @@ public class SymmetricWrapper {
             cipher.updateAAD(associatedData);
         }
 
-        byte[] plaintext = cipher.doFinal(symmetricEncryptionResult.ciphertext());
+        final byte[] plaintext = cipher.doFinal(symmetricEncryptionResult.ciphertext());
 
 
         return new SymmetricDecryptionResult(plaintext, symmetricEncryptionResult.symmetricAlgorithm());
@@ -135,30 +139,32 @@ public class SymmetricWrapper {
         return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
     }
 
-    private boolean isKeyDefined(SymmetricEncryption symmetricEncryption) {
-        return symmetricEncryption.getKey() != null && symmetricEncryption.getKey().getEncoded().length > 0;
+    private boolean isKeyDefined(SymmetricEncryptionBuilder symmetricEncryptionBuilder) {
+        return symmetricEncryptionBuilder.getKey() != null && symmetricEncryptionBuilder.getKey().getEncoded().length > 0;
     }
 
     private IvParameterSpec generateIvRest() {
 
-        byte[] iv = new byte[REST_IV_SIZE];
-        random = new SecureRandom();
+        final byte[] iv = new byte[REST_IV_SIZE];
+        final Random random = new SecureRandom();
         random.nextBytes(iv);
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+        final IvParameterSpec ivSpec = new IvParameterSpec(iv);
         return ivSpec;
     }
 
     private IvParameterSpec generateNonceGCM() {
 
-        byte[] nonce = new byte[GCM_IV_SIZE];
-        random = new SecureRandom();
+        final byte[] nonce = new byte[GCM_IV_SIZE];
+        final Random random = new SecureRandom();
         random.nextBytes(nonce);
-        IvParameterSpec ivSpec = new IvParameterSpec(nonce);
+        final IvParameterSpec ivSpec = new IvParameterSpec(nonce);
         return ivSpec;
     }
 
     public boolean isAlgorithmSecure(SymmetricAlgorithm symmetricAlgorithm) {
-        return true;
+
+        return symmetricEncryptionConfig.algorithms().contains(symmetricAlgorithm.getLabel());
+
     }
 
 

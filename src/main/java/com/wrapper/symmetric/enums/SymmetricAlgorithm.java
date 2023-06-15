@@ -9,6 +9,7 @@ import java.util.Arrays;
  */
 public enum SymmetricAlgorithm {
 
+    AES_CBC_128_NoPadding("AES_CBC_128_NoPadding"),
     AES_CBC_128_PKCS5Padding("AES_CBC_128_PKCS5Padding"),
     AES_CBC_192_PKCS5Padding("AES_CBC_192_PKCS5Padding"),
     AES_CBC_256_PKCS5Padding("AES_CBC_256_PKCS5Padding"),
