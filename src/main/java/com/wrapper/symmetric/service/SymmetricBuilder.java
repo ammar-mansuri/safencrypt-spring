@@ -11,30 +11,30 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 
 @Component
-public class SymmetricEncryptionBuilder {
+public class SymmetricBuilder {
 
     private SymmetricAlgorithm symmetricAlgorithm;
     private SecretKey key;
     private byte[] plaintext;
     private byte[] associatedData;
 
-    private static SymmetricEncryptionBuilder encryption;
+    private static SymmetricBuilder encryption;
 
-    private SymmetricWrapper symmetricWrapper;
+    private SymmetricImpl symmetricImpl;
 
-    private SymmetricEncryptionBuilder() {
+    private SymmetricBuilder() {
         // private constructor to enforce the use of builder pattern
     }
 
     @Autowired
-    private SymmetricEncryptionBuilder(SymmetricWrapper symmetricWrapper) {
-        encryption = new SymmetricEncryptionBuilder();
-        this.symmetricWrapper = symmetricWrapper;
+    private SymmetricBuilder(SymmetricImpl symmetricImpl) {
+        encryption = new SymmetricBuilder();
+        this.symmetricImpl = symmetricImpl;
     }
 
     @PostConstruct
     public void init() {
-        encryption.symmetricWrapper = symmetricWrapper;
+        encryption.symmetricImpl = symmetricImpl;
     }
 
     public SymmetricAlgorithm getSymmetricAlgorithm() {
@@ -54,24 +54,24 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static KeyBuilder createEncryptionBuilder() {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new KeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
     public static KeyBuilder createEncryptionBuilder(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static CiphertextBuilder createDecryptionBuilder() {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricWrapper);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new CiphertextBuilder(encryption);
     }
 
     public static class KeyBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private KeyBuilder(SymmetricEncryptionBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+        private KeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
             encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
@@ -88,9 +88,9 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class PlaintextBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private PlaintextBuilder(SymmetricEncryptionBuilder encryption) {
+        private PlaintextBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -106,15 +106,15 @@ public class SymmetricEncryptionBuilder {
 
         @SneakyThrows
         public SymmetricEncryptionResult encrypt() {
-            return encryption.symmetricWrapper.encrypt(encryption);
+            return encryption.symmetricImpl.encrypt(encryption);
         }
     }
 
 
     public static class CiphertextBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private CiphertextBuilder(SymmetricEncryptionBuilder encryption) {
+        private CiphertextBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -131,7 +131,7 @@ public class SymmetricEncryptionBuilder {
                 throw new Exception("Associated Data can only be SET for algorithm AES_GCM");
             }
 
-            return encryption.symmetricWrapper.decrypt(symmetricEncryptionResult, encryption.getAssociatedData());
+            return encryption.symmetricImpl.decrypt(symmetricEncryptionResult, encryption.getAssociatedData());
         }
     }
 }

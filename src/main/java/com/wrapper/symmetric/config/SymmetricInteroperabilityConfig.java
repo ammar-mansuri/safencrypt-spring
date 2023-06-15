@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Validated
 @ConfigurationProperties(prefix = "crypto-config.interoperability")
-public record InteroperabilitySymmetricEncryptionConfig(Map<String, Details> languages) {
+public record SymmetricInteroperabilityConfig(Map<String, Details> languages) {
 
     public record Details(String libraryProvider, Symmetric symmetric) {
 

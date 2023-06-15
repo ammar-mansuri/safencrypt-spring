@@ -1,7 +1,7 @@
 package com.wrapper.symmetric.service;
 
-import com.wrapper.symmetric.config.InteroperabilitySymmetricEncryptionConfig;
-import com.wrapper.symmetric.config.SymmetricEncryptionConfig;
+import com.wrapper.symmetric.config.SymmetricConfig;
+import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
@@ -21,43 +21,43 @@ import java.text.MessageFormat;
 import java.util.Random;
 
 @Service
-public class SymmetricWrapper {
+public class SymmetricImpl {
 
     private final int GCM_TAG_LENGTH = 96;
     private final int GCM_IV_SIZE = 12;
     private final int REST_IV_SIZE = 16;
 
 
-    private InteroperabilitySymmetricEncryptionConfig interoperabilitySymmetricEncryptionConfig;
-    private SymmetricEncryptionConfig symmetricEncryptionConfig;
+    private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
+    private SymmetricConfig symmetricConfig;
 
     @Autowired
-    public SymmetricWrapper(SymmetricEncryptionConfig symmetricEncryptionConfig, InteroperabilitySymmetricEncryptionConfig interoperabilitySymmetricEncryptionConfig) {
-        this.symmetricEncryptionConfig = symmetricEncryptionConfig;
-        this.interoperabilitySymmetricEncryptionConfig = interoperabilitySymmetricEncryptionConfig;
+    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig) {
+        this.symmetricConfig = symmetricConfig;
+        this.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
     }
 
     @SneakyThrows
-    protected SymmetricEncryptionResult encrypt(SymmetricEncryptionBuilder symmetricEncryptionBuilder) {
+    protected SymmetricEncryptionResult encrypt(SymmetricBuilder symmetricBuilder) {
 
-        if (!isAlgorithmSecure(symmetricEncryptionBuilder.getSymmetricAlgorithm())) {
-            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionBuilder.getSymmetricAlgorithm().getLabel()));
+        if (!isAlgorithmSecure(symmetricBuilder.getSymmetricAlgorithm())) {
+            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricBuilder.getSymmetricAlgorithm().getLabel()));
         }
 
-        SecretKey secretKey = symmetricEncryptionBuilder.getKey();
+        SecretKey secretKey = symmetricBuilder.getKey();
 
-        if (!isKeyDefined(symmetricEncryptionBuilder)) {
+        if (!isKeyDefined(symmetricBuilder)) {
 
-            KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricEncryptionBuilder.getSymmetricAlgorithm()));
-            kg.init(Utility.getAlgorithmBytes(symmetricEncryptionBuilder.getSymmetricAlgorithm()));
+            KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricBuilder.getSymmetricAlgorithm()));
+            kg.init(Utility.getAlgorithmBytes(symmetricBuilder.getSymmetricAlgorithm()));
             secretKey = kg.generateKey();
         }
 
-        if (isGCM(symmetricEncryptionBuilder.getSymmetricAlgorithm())) {
-            return encryptWithGCM(symmetricEncryptionBuilder.getSymmetricAlgorithm(), secretKey, symmetricEncryptionBuilder.getPlaintext(), symmetricEncryptionBuilder.getAssociatedData());
+        if (isGCM(symmetricBuilder.getSymmetricAlgorithm())) {
+            return encryptWithGCM(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlaintext(), symmetricBuilder.getAssociatedData());
         }
 
-        return encrypt(symmetricEncryptionBuilder.getSymmetricAlgorithm(), secretKey, symmetricEncryptionBuilder.getPlaintext());
+        return encrypt(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlaintext());
     }
 
 
@@ -139,8 +139,8 @@ public class SymmetricWrapper {
         return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
     }
 
-    private boolean isKeyDefined(SymmetricEncryptionBuilder symmetricEncryptionBuilder) {
-        return symmetricEncryptionBuilder.getKey() != null && symmetricEncryptionBuilder.getKey().getEncoded().length > 0;
+    private boolean isKeyDefined(SymmetricBuilder symmetricBuilder) {
+        return symmetricBuilder.getKey() != null && symmetricBuilder.getKey().getEncoded().length > 0;
     }
 
     private IvParameterSpec generateIvRest() {
@@ -163,7 +163,7 @@ public class SymmetricWrapper {
 
     public boolean isAlgorithmSecure(SymmetricAlgorithm symmetricAlgorithm) {
 
-        return symmetricEncryptionConfig.algorithms().contains(symmetricAlgorithm.getLabel());
+        return symmetricConfig.algorithms().contains(symmetricAlgorithm.getLabel());
 
     }
 
