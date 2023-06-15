@@ -229,7 +229,7 @@ public class SymmetricImplTest {
 
 
     @Test
-    public void testSymmetricInteroperability() throws Exception {
+    public void testSymmetricInteroperabilityWithCSharp() throws Exception {
 
         SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
                 .createInteroperableEncryptionBuilder(SymmetricInteroperability.CSharp)

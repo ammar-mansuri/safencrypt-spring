@@ -1,20 +1,22 @@
 package com.wrapper.builder;
 
+import com.wrapper.Application;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.service.SymmetricBuilder;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.charset.StandardCharsets;
 
+@SpringBootTest(classes = {Application.class})
 public class SymmetricBuilderBuilderTest {
 
 
     @Test
     public void testBuilderAES_GCM() {
-
 
         SymmetricBuilder.createEncryptionBuilder()
                 .key(SymmetricKeyGenerator.generateSymmetricKey())
