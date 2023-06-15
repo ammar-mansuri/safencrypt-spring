@@ -1,7 +1,9 @@
 package com.wrapper.symmetric.service;
 
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
+import com.wrapper.symmetric.enums.SymmetricInteroperability;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
+import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
@@ -14,6 +16,7 @@ import javax.crypto.SecretKey;
 public class SymmetricBuilder {
 
     private SymmetricAlgorithm symmetricAlgorithm;
+    private SymmetricInteroperability symmetricInteroperability;
     private SecretKey key;
     private byte[] plaintext;
     private byte[] associatedData;
@@ -41,6 +44,10 @@ public class SymmetricBuilder {
         return symmetricAlgorithm;
     }
 
+    public SymmetricInteroperability getSymmetricInteroperability() {
+        return symmetricInteroperability;
+    }
+
     public SecretKey getKey() {
         return key;
     }
@@ -63,6 +70,11 @@ public class SymmetricBuilder {
         return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
+    public static InteroperableEncryptionBuilder createInteroperableEncryptionBuilder(SymmetricInteroperability symmetricInteroperability) {
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
+        return new InteroperableEncryptionBuilder(encryption, symmetricInteroperability);
+    }
+
     public static CiphertextBuilder createDecryptionBuilder() {
         encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new CiphertextBuilder(encryption);
@@ -73,7 +85,7 @@ public class SymmetricBuilder {
 
         private KeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
-            encryption.symmetricAlgorithm = symmetricAlgorithm;
+            this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
 
         public KeyBuilder key(SecretKey key) {
@@ -93,6 +105,7 @@ public class SymmetricBuilder {
         private PlaintextBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
+
 
         public PlaintextBuilder optionalAssociatedData(byte[] associatedData) throws Exception {
 
@@ -119,7 +132,6 @@ public class SymmetricBuilder {
         }
 
         public CiphertextBuilder optionalAssociatedData(byte[] associatedData) {
-
             encryption.associatedData = associatedData;
             return this;
         }
@@ -132,6 +144,43 @@ public class SymmetricBuilder {
             }
 
             return encryption.symmetricImpl.decrypt(symmetricEncryptionResult, encryption.getAssociatedData());
+        }
+    }
+
+    public static class InteroperableEncryptionBuilder {
+        private SymmetricBuilder encryption;
+
+        private InteroperableEncryptionBuilder(SymmetricBuilder encryption, SymmetricInteroperability symmetricInteroperability) {
+            this.encryption = encryption;
+            this.encryption.symmetricInteroperability = symmetricInteroperability;
+        }
+
+        public InteroperablePlaintextBuilder plaintext(byte[] plaintext) {
+            encryption.plaintext = plaintext;
+            return new InteroperablePlaintextBuilder(encryption);
+        }
+    }
+
+    public static class InteroperablePlaintextBuilder {
+        private SymmetricBuilder encryption;
+
+        private InteroperablePlaintextBuilder(SymmetricBuilder encryption) {
+            this.encryption = encryption;
+        }
+
+        public InteroperablePlaintextBuilder optionalAssociatedData(byte[] associatedData) throws Exception {
+
+            if (!encryption.symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
+                throw new Exception("Associated Data can only be SET for algorithm AES_GCM");
+            }
+
+            encryption.associatedData = associatedData;
+            return new InteroperablePlaintextBuilder(encryption);
+        }
+
+        @SneakyThrows
+        public SymmetricEncryptionBase64 encrypt() {
+            return encryption.symmetricImpl.interoperableEncrypt(encryption);
         }
     }
 }

@@ -1,9 +1,11 @@
 package com.wrapper;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import java.security.Security;
 
 
 @SpringBootApplication(scanBasePackages = Application.BASE_PACKAGE)
@@ -16,12 +18,13 @@ public class Application {
 
 
     public static void main(String[] args) {
-        applicationContext =
-                new AnnotationConfigApplicationContext(Application.class);
-
+        /*applicationContext = new AnnotationConfigApplicationContext(Application.class);
         for (String beanName : applicationContext.getBeanDefinitionNames()) {
             System.out.println(beanName);
-        }
+        }*/
+
+        Security.addProvider(new BouncyCastleProvider());
+
     }
 
 }

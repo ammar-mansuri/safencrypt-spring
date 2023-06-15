@@ -9,9 +9,13 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "crypto-config.interoperability")
 public record SymmetricInteroperabilityConfig(Map<String, Details> languages) {
 
+    public Details getlanguageDetails(String key) {
+        return languages.get(key);
+    }
+
     public record Details(String libraryProvider, Symmetric symmetric) {
 
-        public record Symmetric(String defaultAlgo, String encoding, String keyBytes, String ivBytes,
+        public record Symmetric(String defaultAlgo, String encoding, String ivBytes,
                                 String Resultant) {
         }
     }

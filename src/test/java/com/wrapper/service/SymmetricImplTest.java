@@ -4,6 +4,7 @@ import com.wrapper.Application;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
+import com.wrapper.symmetric.enums.SymmetricInteroperability;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
@@ -23,7 +24,6 @@ import static com.wrapper.symmetric.utils.Utility.getEncodedResult;
 
 @SpringBootTest(classes = {Application.class})
 public class SymmetricImplTest {
-
 
     @Autowired
     private SymmetricConfig symmetricConfig;
@@ -225,5 +225,17 @@ public class SymmetricImplTest {
 
         Assertions.assertEquals("Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
 
+    }
+
+
+    @Test
+    public void testSymmetricInteroperability() throws Exception {
+
+        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
+                .createInteroperableEncryptionBuilder(SymmetricInteroperability.CSharp)
+                .plaintext("dasdsa".getBytes(StandardCharsets.UTF_8))
+                .encrypt();
+
+        System.out.println(symmetricEncryptionResult.toString());
     }
 }

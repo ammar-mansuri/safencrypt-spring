@@ -5,6 +5,7 @@ Crypto-Config:
     Default-Algo: AES_CBC_256_PKCS5Padding
     Algorithms:
       - AES_CBC_128_PKCS5Padding
+      - AES_CBC_128_PKCS7Padding  #Enabled For CSHARP/DOTNET
       - AES_CBC_192_PKCS5Padding
       - AES_CBC_256_PKCS5Padding
       - AES_GCM_128_NoPadding
@@ -17,11 +18,17 @@ Crypto-Config:
 
   Interoperability:
     Languages:
-      C-Sharp#:
+      CSharp:
         Library-Provider: Microsoft
         Symmetric:
           Default-Algo: AES_CBC_128_PKCS7Padding
           Encoding: UTF-8
-          Key-Bytes: 16
           IV-Bytes: 16
-          Resultant: BASE-64
+          Resultant: BASE-64 #FIXED
+      DotNet:
+        Library-Provider: Microsoft
+        Symmetric:
+          Default-Algo: AES_CBC_128_PKCS7Padding
+          Encoding: UTF-8
+          IV-Bytes: 16
+          Resultant: BASE-64 #FIXED

@@ -23,5 +23,13 @@ public class SymmetricKeyGenerator {
         return kg.generateKey();
     }
 
+    @SneakyThrows
+    protected SecretKey generateSymmetricKeyInternal(SymmetricAlgorithm symmetricAlgorithm) {
+
+        KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricAlgorithm));
+        kg.init(Utility.getAlgorithmBytes(symmetricAlgorithm));
+        return kg.generateKey();
+    }
+
 
 }
