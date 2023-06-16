@@ -33,7 +33,7 @@ public class SymmetricImplTest {
     private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
 
     @Test
-    public void testSymmetricEncryptionUsingAllDefaults() throws Exception {
+    public void testSymmetricEncryptionUsingAllDefaults() {
 
         SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder()
                 .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
@@ -48,7 +48,7 @@ public class SymmetricImplTest {
 
 
     @Test
-    public void testSymmetricEncryptionUsingDefaultAlgorithm() throws Exception {
+    public void testSymmetricEncryptionUsingDefaultAlgorithm() {
 
 
         SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder()
@@ -65,7 +65,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingDefaultKey() throws Exception {
+    public void testSymmetricEncryptionUsingDefaultKey() {
 
 
         SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_GCM_256_NoPadding)
@@ -81,7 +81,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingKeyLoading() throws Exception {
+    public void testSymmetricEncryptionUsingKeyLoading() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_192_PKCS5Padding;
 
@@ -101,7 +101,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithOutAuthenticationTag() throws Exception {
+    public void testSymmetricEncryptionUsingGCMWithOutAuthenticationTag() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_256_PKCS5Padding;
 
@@ -121,7 +121,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithAuthenticationTag() throws Exception {
+    public void testSymmetricEncryptionUsingGCMWithAuthenticationTag() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_128_NoPadding;
 
@@ -146,7 +146,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingInsecureAlgorithm() throws SafencryptException {
+    public void testSymmetricEncryptionUsingInsecureAlgorithm() {
 
         Assertions.assertThrows(SafencryptException.class, () -> {
             SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_CBC_128_NoPadding)
@@ -158,7 +158,7 @@ public class SymmetricImplTest {
 
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithTagMismatch() throws Exception {
+    public void testSymmetricEncryptionUsingGCMWithTagMismatch() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_128_NoPadding;
 
@@ -186,7 +186,7 @@ public class SymmetricImplTest {
 
 
     @Test
-    public void encryptForPython() throws Exception {
+    public void encryptForPython() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_256_PKCS5Padding;
 
@@ -230,11 +230,22 @@ public class SymmetricImplTest {
 
 
     @Test
-    public void testSymmetricInteroperabilityWithCSharp() throws Exception {
+    public void testSymmetricInteroperabilityWithCSharp() {
 
         SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
                 .createInteroperableEncryptionBuilder(SymmetricInteroperability.CSharp)
                 .plaintext("dasdsa".getBytes(StandardCharsets.UTF_8))
+                .encrypt();
+
+        System.out.println(symmetricEncryptionResult.toString());
+    }
+
+    @Test
+    public void testSymmetricEncryptionInteroperabilityWithPython() {
+
+        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
+                .createInteroperableEncryptionBuilder(SymmetricInteroperability.Python)
+                .plaintext("TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
 
         System.out.println(symmetricEncryptionResult.toString());

@@ -9,8 +9,9 @@ import java.util.Arrays;
  */
 public enum SymmetricAlgorithm {
 
-    AES_CBC_128_NoPadding("AES_CBC_128_NoPadding"),
-    AES_CBC_128_PKCS7Padding("AES_CBC_128_PKCS7Padding"), //Enabled For CSHARP/DOTNET
+    AES_CBC_128_NoPadding("AES_CBC_128_NoPadding"),         //Test for Unsecure Algo Not Present in Config
+    AES_CBC_128_PKCS7Padding("AES_CBC_128_PKCS7Padding"),   //Enabled For CSHARP/DOTNET
+    AES_CBC_256_PKCS7Padding("AES_CBC_256_PKCS7Padding"),   //Enabled For Python
     AES_CBC_128_PKCS5Padding("AES_CBC_128_PKCS5Padding"),
     AES_CBC_192_PKCS5Padding("AES_CBC_192_PKCS5Padding"),
     AES_CBC_256_PKCS5Padding("AES_CBC_256_PKCS5Padding"),
@@ -28,7 +29,7 @@ public enum SymmetricAlgorithm {
 
     public static SymmetricAlgorithm fromLabel(String label) {
 
-        return Arrays.stream(SymmetricAlgorithm.values()).filter(val -> val.getLabel().equals(label)).findFirst().orElseThrow(() -> new IllegalArgumentException("The Selected Algorithm is Currently Not Supported" + label));
+        return Arrays.stream(SymmetricAlgorithm.values()).filter(val -> val.getLabel().equals(label)).findFirst().orElseThrow(() -> new IllegalArgumentException("The Selected Algorithm is Currently Not Supported " + label));
     }
 
     private SymmetricAlgorithm(String label) {
