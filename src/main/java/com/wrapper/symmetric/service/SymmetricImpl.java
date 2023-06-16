@@ -1,5 +1,6 @@
 package com.wrapper.symmetric.service;
 
+import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
@@ -53,7 +54,7 @@ public class SymmetricImpl {
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
         if (!isAlgorithmSecure(symmetricAlgorithm.getLabel())) {
-            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", languageDetails.symmetric().defaultAlgo()));
+            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", languageDetails.symmetric().defaultAlgo()));
         }
 
 
@@ -73,7 +74,7 @@ public class SymmetricImpl {
     protected SymmetricEncryptionResult encrypt(SymmetricBuilder symmetricBuilder) {
 
         if (!isAlgorithmSecure(symmetricBuilder.getSymmetricAlgorithm().getLabel())) {
-            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricBuilder.getSymmetricAlgorithm().getLabel()));
+            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricBuilder.getSymmetricAlgorithm().getLabel()));
         }
 
         SecretKey secretKey = symmetricBuilder.getKey();
@@ -98,7 +99,8 @@ public class SymmetricImpl {
         return encrypt(REST_IV_SIZE, symmetricAlgorithm, secretKey, plaintext);
     }
 
-    private SymmetricEncryptionResult encrypt(int IV_LENGTH, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) throws Exception {
+    @SneakyThrows
+    private SymmetricEncryptionResult encrypt(int IV_LENGTH, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
 
 
         Cipher cipher;
@@ -111,7 +113,7 @@ public class SymmetricImpl {
                 Security.addProvider(new BouncyCastleProvider());
                 cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm), "BC");
             } catch (NoSuchProviderException ex) {
-                throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", symmetricAlgorithm.getLabel()));
+                throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", symmetricAlgorithm.getLabel()));
             }
         }
 
@@ -127,7 +129,8 @@ public class SymmetricImpl {
     }
 
 
-    private SymmetricEncryptionResult encryptWithGCM(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) throws Exception {
+    @SneakyThrows
+    private SymmetricEncryptionResult encryptWithGCM(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) {
 
         final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
 
@@ -148,7 +151,7 @@ public class SymmetricImpl {
     protected SymmetricDecryptionResult decrypt(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) {
 
         if (!isAlgorithmSecure(symmetricEncryptionResult.symmetricAlgorithm().getLabel())) {
-            throw new Exception(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionResult.symmetricAlgorithm().getLabel()));
+            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionResult.symmetricAlgorithm().getLabel()));
         }
 
         return isGCM(symmetricEncryptionResult.symmetricAlgorithm()) ? decryptWithGCM(symmetricEncryptionResult, associatedData) : decryptRest(symmetricEncryptionResult);

@@ -1,5 +1,6 @@
 package com.wrapper.symmetric.service;
 
+import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperability;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
@@ -107,10 +108,11 @@ public class SymmetricBuilder {
         }
 
 
-        public PlaintextBuilder optionalAssociatedData(byte[] associatedData) throws Exception {
+        @SneakyThrows
+        public PlaintextBuilder optionalAssociatedData(byte[] associatedData) {
 
             if (!encryption.symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
-                throw new Exception("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             }
 
             encryption.associatedData = associatedData;
@@ -140,7 +142,7 @@ public class SymmetricBuilder {
         public SymmetricDecryptionResult decrypt(SymmetricEncryptionResult symmetricEncryptionResult) {
 
             if (encryption.associatedData != null && !symmetricEncryptionResult.symmetricAlgorithm().getLabel().startsWith("AES_GCM")) {
-                throw new Exception("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             }
 
             return encryption.symmetricImpl.decrypt(symmetricEncryptionResult, encryption.getAssociatedData());
@@ -168,10 +170,11 @@ public class SymmetricBuilder {
             this.encryption = encryption;
         }
 
-        public InteroperablePlaintextBuilder optionalAssociatedData(byte[] associatedData) throws Exception {
+        @SneakyThrows
+        public InteroperablePlaintextBuilder optionalAssociatedData(byte[] associatedData) {
 
             if (!encryption.symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
-                throw new Exception("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             }
 
             encryption.associatedData = associatedData;

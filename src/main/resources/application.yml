@@ -12,12 +12,16 @@ Crypto-Config:
       - AES_GCM_192_NoPadding
       - AES_GCM_256_NoPadding
 
-  #    Pick Enum and validate against this config file
-
-
 
   Interoperability:
     Languages:
+      Python:
+        Library-Provider: Default
+        Symmetric:
+          Default-Algo: AES_CBC_128_PKCS7Padding
+          Encoding: UTF-8
+          IV-Bytes: 16
+          Resultant: BASE-64 #FIXED
       CSharp:
         Library-Provider: Microsoft
         Symmetric:

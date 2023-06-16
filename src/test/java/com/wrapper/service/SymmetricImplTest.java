@@ -1,6 +1,7 @@
 package com.wrapper.service;
 
 import com.wrapper.Application;
+import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
@@ -145,9 +146,9 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingInsecureAlgorithm() throws Exception {
+    public void testSymmetricEncryptionUsingInsecureAlgorithm() throws SafencryptException {
 
-        Assertions.assertThrows(Exception.class, () -> {
+        Assertions.assertThrows(SafencryptException.class, () -> {
             SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_CBC_128_NoPadding)
                     .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
                     .encrypt();
