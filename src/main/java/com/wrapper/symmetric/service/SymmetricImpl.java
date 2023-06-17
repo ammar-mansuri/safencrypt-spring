@@ -7,7 +7,7 @@ import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.utils.Utility;
+import com.wrapper.utils.Utility;
 import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +66,7 @@ public class SymmetricImpl {
 //        languageDetails.symmetric().Resultant();
 
 
-        return Utility.getEncodedResult(encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricAlgorithm), symmetricBuilder.getPlaintext()));
+        return Utility.getSymmetricEncodedResult(encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricAlgorithm), symmetricBuilder.getPlaintext()));
 
     }
 

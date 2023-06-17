@@ -1,4 +1,4 @@
-package com.wrapper.symmetric.utils;
+package com.wrapper.utils;
 
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
@@ -35,7 +35,7 @@ public class Utility {
         return symmetricAlgorithm.getLabel().split("_")[3];
     }
 
-    public static SymmetricEncryptionBase64 getEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
+    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
         return new SymmetricEncryptionBase64(
                 Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
                 Base64.getEncoder().encodeToString(symmetricEncryptionResult.key()),
@@ -43,5 +43,5 @@ public class Utility {
                 null,
                 symmetricEncryptionResult.symmetricAlgorithm());
     }
-    
+
 }

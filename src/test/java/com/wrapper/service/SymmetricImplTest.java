@@ -20,7 +20,7 @@ import javax.crypto.AEADBadTagException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static com.wrapper.symmetric.utils.Utility.getEncodedResult;
+import static com.wrapper.utils.Utility.getSymmetricEncodedResult;
 
 
 @SpringBootTest(classes = {Application.class})
@@ -38,6 +38,7 @@ public class SymmetricImplTest {
         SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder()
                 .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
+
 
         SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
                 .decrypt(symmetricEncryptionResult);
@@ -198,7 +199,7 @@ public class SymmetricImplTest {
                 .plaintext(plainText)
                 .encrypt();
 
-        SymmetricEncryptionBase64 symmetricEncryptionBase64 = getEncodedResult(symmetricEncryptionResult);
+        SymmetricEncryptionBase64 symmetricEncryptionBase64 = getSymmetricEncodedResult(symmetricEncryptionResult);
 
         System.out.println("Key: " + symmetricEncryptionBase64.key());
         System.out.println("IV: " + symmetricEncryptionBase64.iv());
@@ -243,9 +244,12 @@ public class SymmetricImplTest {
     @Test
     public void testSymmetricEncryptionInteroperabilityWithPython() {
 
+        byte[] plainText = "TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8);
+
+
         SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
                 .createInteroperableEncryptionBuilder(SymmetricInteroperability.Python)
-                .plaintext("TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8))
+                .plaintext(plainText)
                 .encrypt();
 
         System.out.println(symmetricEncryptionResult.toString());
