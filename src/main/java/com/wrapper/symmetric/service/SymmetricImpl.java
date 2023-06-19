@@ -7,7 +7,7 @@ import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.utils.Utility;
+import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +32,15 @@ public class SymmetricImpl {
     private final int GCM_TAG_LENGTH = 96;
     private final int GCM_IV_SIZE = 12;
     private final int REST_IV_SIZE = 16;
-
-    private final SymmetricKeyGenerator symmetricKeyGenerator;
     private final SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
     private final SymmetricConfig symmetricConfig;
 
     private final SymmetricKeyStore symmetricKeyStore;
 
     @Autowired
-    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig, SymmetricKeyGenerator symmetricKeyGenerator, SymmetricKeyStore symmetricKeyStore) {
+    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig, SymmetricKeyStore symmetricKeyStore) {
         this.symmetricConfig = symmetricConfig;
         this.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
-        this.symmetricKeyGenerator = symmetricKeyGenerator;
         this.symmetricKeyStore = symmetricKeyStore;
     }
 
@@ -67,7 +64,7 @@ public class SymmetricImpl {
 //        languageDetails.symmetric().encoding();
 //        languageDetails.symmetric().Resultant();
 
-        SecretKey secretKey = symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricAlgorithm);
+        SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
         SymmetricEncryptionResult symmetricEncryptionResult = encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, secretKey, symmetricBuilder.getPlaintext());
 
         String alias = "alias_" + System.currentTimeMillis();
@@ -87,7 +84,7 @@ public class SymmetricImpl {
 
         if (!isKeyDefined(symmetricBuilder)) {
 
-            secretKey = symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricBuilder.getSymmetricAlgorithm());
+            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricBuilder.getSymmetricAlgorithm());
         }
 
         if (isGCM(symmetricBuilder.getSymmetricAlgorithm())) {

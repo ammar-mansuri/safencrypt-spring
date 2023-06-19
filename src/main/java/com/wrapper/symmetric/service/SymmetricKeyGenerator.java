@@ -1,7 +1,7 @@
 package com.wrapper.symmetric.service;
 
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.utils.Utility;
+import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +17,6 @@ public class SymmetricKeyGenerator {
 
     @SneakyThrows
     public static SecretKey generateSymmetricKey(SymmetricAlgorithm symmetricAlgorithm) {
-
-        KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricAlgorithm));
-        kg.init(Utility.getAlgorithmBytes(symmetricAlgorithm));
-        return kg.generateKey();
-    }
-
-    @SneakyThrows
-    protected SecretKey generateSymmetricKeyInternal(SymmetricAlgorithm symmetricAlgorithm) {
 
         KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricAlgorithm));
         kg.init(Utility.getAlgorithmBytes(symmetricAlgorithm));

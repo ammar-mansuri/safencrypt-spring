@@ -1,9 +1,9 @@
-Crypto-Config:
+crypto-config:
 
   # List of Symmetric Algorithms currently considered as Secure
-  Symmetric-Encryption:
-    Default-Algo: AES_CBC_256_PKCS5Padding
-    Algorithms:
+  symmetric-encryption:
+    default-algo: AES_CBC_256_PKCS5Padding
+    algorithms:
       - AES_CBC_128_PKCS5Padding
       - AES_CBC_128_PKCS7Padding  #Enabled For CSHARP/DOTNET
       - AES_CBC_256_PKCS7Padding  #Enabled For Python
@@ -13,28 +13,35 @@ Crypto-Config:
       - AES_GCM_192_NoPadding
       - AES_GCM_256_NoPadding
 
+  # List of Asymmetric Algorithms currently considered as Secure
+  asymmetric-encryption:
+    default-algo: RSA_ECB_2048_PKCS1Padding
+    algorithms:
+      - RSA_ECB_2048_PKCS1Padding
+      - RSA_ECB_3072_PKCS1Padding
+      - RSA_ECB_4096_PKCS1Padding
 
   #ONLY SUPPORTS AES_CBC AS OF NOW
-  Interoperability:
-    Languages:
-      Python:
-        Library-Provider: Crypto
-        Symmetric:
-          Default-Algo: AES_CBC_256_PKCS7Padding
-          IV-Bytes: 16
-          Resultant: BASE-64 #FIXED
-      CSharp:
-        Library-Provider: Microsoft
-        Symmetric:
-          Default-Algo: AES_CBC_128_PKCS7Padding
-          IV-Bytes: 16
-          Resultant: BASE-64 #FIXED
+  interoperability:
+    languages:
+      python:
+        library-Provider: Crypto
+        symmetric:
+          default-Algo: AES_CBC_256_PKCS7Padding
+          iv-bytes: 16
+          resultant: BASE-64 #FIXED
+      csharp:
+        library-Provider: Microsoft
+        symmetric:
+          default-Algo: AES_CBC_128_PKCS7Padding
+          iv-bytes: 16
+          resultant: BASE-64 #FIXED
       DotNet:
-        Library-Provider: Microsoft
-        Symmetric:
-          Default-Algo: AES_CBC_128_PKCS7Padding
-          IV-Bytes: 16
-          Resultant: BASE-64 #FIXED
+        library-Provider: Microsoft
+        symmetric:
+          default-Algo: AES_CBC_128_PKCS7Padding
+          iv-bytes: 16
+          resultant: BASE-64 #FIXED
 
 
 

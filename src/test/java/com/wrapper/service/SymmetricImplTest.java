@@ -2,14 +2,13 @@ package com.wrapper.service;
 
 import com.wrapper.Application;
 import com.wrapper.exceptions.SafencryptException;
-import com.wrapper.symmetric.config.SymmetricConfig;
-import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperability;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.service.SymmetricBuilder;
+import com.wrapper.symmetric.service.SymmetricImpl;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
 import com.wrapper.symmetric.service.SymmetricKeyStore;
 import org.junit.jupiter.api.Assertions;
@@ -26,10 +25,7 @@ import java.util.Base64;
 public class SymmetricImplTest {
 
     @Autowired
-    private SymmetricConfig symmetricConfig;
-
-    @Autowired
-    private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
+    private SymmetricImpl symmetricImpl;
 
     @Autowired
     private SymmetricKeyStore symmetricKeyStore;

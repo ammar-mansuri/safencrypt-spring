@@ -1,10 +1,6 @@
 package com.wrapper.asymmetric.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
-import java.util.Map;
-
+/*
 @Validated
 @ConfigurationProperties(prefix = "crypto-config.interoperability")
 public record ASymmetricInteroperabilityConfig(Map<String, Details> languages) {
@@ -20,4 +16,4 @@ public record ASymmetricInteroperabilityConfig(Map<String, Details> languages) {
         }
     }
 
-}
+}*/

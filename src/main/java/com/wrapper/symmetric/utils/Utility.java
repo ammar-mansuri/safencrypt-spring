@@ -1,4 +1,4 @@
-package com.wrapper.utils;
+package com.wrapper.symmetric.utils;
 
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
