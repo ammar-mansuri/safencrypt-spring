@@ -37,11 +37,14 @@ public class SymmetricImpl {
     private final SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
     private final SymmetricConfig symmetricConfig;
 
+    private final SymmetricKeyStore symmetricKeyStore;
+
     @Autowired
-    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig, SymmetricKeyGenerator symmetricKeyGenerator) {
+    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig, SymmetricKeyGenerator symmetricKeyGenerator, SymmetricKeyStore symmetricKeyStore) {
         this.symmetricConfig = symmetricConfig;
         this.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
         this.symmetricKeyGenerator = symmetricKeyGenerator;
+        this.symmetricKeyStore = symmetricKeyStore;
     }
 
     @SneakyThrows
@@ -57,7 +60,6 @@ public class SymmetricImpl {
             throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", languageDetails.symmetric().defaultAlgo()));
         }
 
-
 //        languageDetails.libraryProvider();
 //        languageDetails.symmetric().defaultAlgo();
 //        languageDetails.symmetric().ivBytes();
@@ -65,8 +67,12 @@ public class SymmetricImpl {
 //        languageDetails.symmetric().encoding();
 //        languageDetails.symmetric().Resultant();
 
+        SecretKey secretKey = symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricAlgorithm);
+        SymmetricEncryptionResult symmetricEncryptionResult = encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, secretKey, symmetricBuilder.getPlaintext());
 
-        return Utility.getSymmetricEncodedResult(encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricAlgorithm), symmetricBuilder.getPlaintext()));
+        String alias = "alias_" + System.currentTimeMillis();
+        symmetricKeyStore.saveKey(alias, secretKey);
+        return Utility.getSymmetricEncodedResult(symmetricEncryptionResult, alias);
 
     }
 
@@ -81,8 +87,6 @@ public class SymmetricImpl {
 
         if (!isKeyDefined(symmetricBuilder)) {
 
-//            KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricBuilder.getSymmetricAlgorithm()));
-//            kg.init(Utility.getAlgorithmBytes(symmetricBuilder.getSymmetricAlgorithm()));
             secretKey = symmetricKeyGenerator.generateSymmetricKeyInternal(symmetricBuilder.getSymmetricAlgorithm());
         }
 
@@ -123,7 +127,6 @@ public class SymmetricImpl {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
         final byte[] ciphertext = cipher.doFinal(plaintext);
-
         return new SymmetricEncryptionResult(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
 
     }
@@ -159,7 +162,20 @@ public class SymmetricImpl {
 
     private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionResult symmetricEncryptionResult) throws Exception {
 
-        final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
+        Cipher cipher;
+
+        try {
+            cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
+        } catch (NoSuchAlgorithmException e) {
+
+            try {
+                Security.addProvider(new BouncyCastleProvider());
+                cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()), "BC");
+            } catch (NoSuchProviderException ex) {
+                throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", symmetricEncryptionResult.symmetricAlgorithm().getLabel()));
+            }
+        }
+
 
         final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), Utility.getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
 

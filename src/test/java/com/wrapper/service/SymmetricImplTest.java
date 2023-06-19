@@ -11,6 +11,7 @@ import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.service.SymmetricBuilder;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
+import com.wrapper.symmetric.service.SymmetricKeyStore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.crypto.AEADBadTagException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-
-import static com.wrapper.utils.Utility.getSymmetricEncodedResult;
 
 
 @SpringBootTest(classes = {Application.class})
@@ -31,6 +30,9 @@ public class SymmetricImplTest {
 
     @Autowired
     private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
+
+    @Autowired
+    private SymmetricKeyStore symmetricKeyStore;
 
     @Test
     public void testSymmetricEncryptionUsingAllDefaults() {
@@ -199,12 +201,12 @@ public class SymmetricImplTest {
                 .plaintext(plainText)
                 .encrypt();
 
-        SymmetricEncryptionBase64 symmetricEncryptionBase64 = getSymmetricEncodedResult(symmetricEncryptionResult);
+        /*SymmetricEncryptionBase64 symmetricEncryptionBase64 = getSymmetricEncodedResult(symmetricEncryptionResult);
 
         System.out.println("Key: " + symmetricEncryptionBase64.key());
         System.out.println("IV: " + symmetricEncryptionBase64.iv());
         System.out.println("CipherText: " + symmetricEncryptionBase64.ciphertext());
-        System.out.println("Algo: " + symmetricEncryptionBase64.symmetricAlgorithm());
+        System.out.println("Algo: " + symmetricEncryptionBase64.symmetricAlgorithm());*/
 
     }
 
@@ -235,7 +237,7 @@ public class SymmetricImplTest {
 
         SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
                 .createInteroperableEncryptionBuilder(SymmetricInteroperability.CSharp)
-                .plaintext("dasdsa".getBytes(StandardCharsets.UTF_8))
+                .plaintext("TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
 
         System.out.println(symmetricEncryptionResult.toString());
@@ -254,4 +256,24 @@ public class SymmetricImplTest {
 
         System.out.println(symmetricEncryptionResult.toString());
     }
+
+    @Test
+    public void testSymmetricDecryptionInteroperabilityWithPython() {
+
+        byte[] cipherText = Base64.getDecoder().decode("znhGsJ7RywwYCVqTS9MlD7tcC8qSUTK0XSusJRGki3G/t1O2WgJnTwDPTIoMUVUW".getBytes());
+        byte[] iv = Base64.getDecoder().decode("xtdTk3LA8bLDoiGoyNjeAw==".getBytes());
+
+        SymmetricEncryptionResult symmetricEncryptionResult = new SymmetricEncryptionResult(
+                iv,
+                symmetricKeyStore.loadKey("alias_1687143719446").getEncoded(),
+                cipherText,
+                SymmetricAlgorithm.AES_CBC_256_PKCS5Padding);
+
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
+                .decrypt(symmetricEncryptionResult);
+
+        Assertions.assertEquals("TU Clausthal Located in Clausthal Zellerfeld", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
+    }
+
+
 }

@@ -1,6 +1,12 @@
 # Compiled class file
 *.class
 
+*.jks
+*.jceks
+*.p12
+application-keystore.yml
+/Python/
+
 # Log files
 logs/
 

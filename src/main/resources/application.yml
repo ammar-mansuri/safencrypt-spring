@@ -14,6 +14,7 @@ Crypto-Config:
       - AES_GCM_256_NoPadding
 
 
+  #ONLY SUPPORTS AES_CBC AS OF NOW
   Interoperability:
     Languages:
       Python:
@@ -34,3 +35,8 @@ Crypto-Config:
           Default-Algo: AES_CBC_128_PKCS7Padding
           IV-Bytes: 16
           Resultant: BASE-64 #FIXED
+
+
+
+spring.profiles.include: 'keystore'
+

@@ -35,12 +35,11 @@ public class Utility {
         return symmetricAlgorithm.getLabel().split("_")[3];
     }
 
-    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
+    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult, String keyAlias) {
         return new SymmetricEncryptionBase64(
                 Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.key()),
+                keyAlias,
                 Base64.getEncoder().encodeToString(symmetricEncryptionResult.ciphertext()),
-                null,
                 symmetricEncryptionResult.symmetricAlgorithm());
     }
 
