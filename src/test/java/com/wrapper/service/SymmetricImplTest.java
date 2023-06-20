@@ -254,6 +254,28 @@ public class SymmetricImplTest {
     }
 
     @Test
+    public void testSymmetricEncryptionDecryptionInteroperabilityWithPython() {
+
+        byte[] plainText = "Checking Interoperability of a Keystore".getBytes();
+
+        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricBuilder
+                .createInteroperableEncryptionBuilder(SymmetricInteroperability.Python)
+                .plaintext(plainText)
+                .encrypt();
+
+        SymmetricEncryptionResult symmetricDecryptionInput = new SymmetricEncryptionResult(
+                Base64.getDecoder().decode(symmetricEncryptionResult.iv()),
+                symmetricKeyStore.loadKey(symmetricEncryptionResult.keyAlias()).getEncoded(),
+                Base64.getDecoder().decode(symmetricEncryptionResult.ciphertext()),
+                symmetricEncryptionResult.symmetricAlgorithm());
+
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
+                .decrypt(symmetricDecryptionInput);
+
+        Assertions.assertEquals("Checking Interoperability of a Keystore", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
+    }
+
+    @Test
     public void testSymmetricDecryptionInteroperabilityWithPython() {
 
         byte[] cipherText = Base64.getDecoder().decode("znhGsJ7RywwYCVqTS9MlD7tcC8qSUTK0XSusJRGki3G/t1O2WgJnTwDPTIoMUVUW".getBytes());

@@ -49,7 +49,7 @@ public class SymmetricImpl {
 
         Objects.nonNull(symmetricBuilder.getSymmetricInteroperability());
 
-        SymmetricInteroperabilityConfig.Details languageDetails = symmetricInteroperabilityConfig.getlanguageDetails(symmetricBuilder.getSymmetricInteroperability().name());
+        SymmetricInteroperabilityConfig.Details languageDetails = symmetricInteroperabilityConfig.languageDetails(symmetricBuilder.getSymmetricInteroperability().name());
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 

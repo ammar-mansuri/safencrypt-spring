@@ -13,6 +13,7 @@ import java.security.KeyStore;
 @Service
 public class SymmetricKeyStore {
 
+    private static String KEY_STORE_FORMAT = "JCEKS";
     private final KeyStoreConfig keyStoreConfig;
 
     public SymmetricKeyStore(KeyStoreConfig keyStoreConfig) {
@@ -25,7 +26,7 @@ public class SymmetricKeyStore {
 
         File keystoreFile = new File(keyStoreConfig.name());
 
-        KeyStore keyStore = KeyStore.getInstance("JCEKS");
+        KeyStore keyStore = KeyStore.getInstance(KEY_STORE_FORMAT);
 
         if (!keystoreFile.exists()) {
             keyStore.load(null, keyStoreConfig.password().toCharArray());
@@ -37,7 +38,7 @@ public class SymmetricKeyStore {
         KeyStore.SecretKeyEntry secretKeyEntry = new KeyStore.SecretKeyEntry(secretKey);
         KeyStore.PasswordProtection keyPasswordProtection = new KeyStore.PasswordProtection(keyStoreConfig.password().toCharArray());
         keyStore.setEntry(alias, secretKeyEntry, keyPasswordProtection);
-        
+
         try (FileOutputStream fileOutputStream = new FileOutputStream(keystoreFile)) {
             keyStore.store(fileOutputStream, keyStoreConfig.password().toCharArray());
         }
@@ -48,7 +49,7 @@ public class SymmetricKeyStore {
     public SecretKey loadKey(String alias) {
 
         char[] password = keyStoreConfig.password().toCharArray();
-        KeyStore keyStore = KeyStore.getInstance("JCEKS");
+        KeyStore keyStore = KeyStore.getInstance(KEY_STORE_FORMAT);
 
         try (FileInputStream fis = new FileInputStream(keyStoreConfig.name())) {
             keyStore.load(fis, password);
