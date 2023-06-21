@@ -1,5 +1,6 @@
 package com.wrapper.symmetric.service;
 
+import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.config.KeyStoreConfig;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
+import java.util.Objects;
 
 @Service
 public class SymmetricKeyStore {
@@ -54,7 +56,12 @@ public class SymmetricKeyStore {
         try (FileInputStream fis = new FileInputStream(keyStoreConfig.name())) {
             keyStore.load(fis, password);
             SecretKey secretKey = (SecretKey) keyStore.getKey(alias, password);
+
+            Objects.requireNonNull(secretKey);
+
             return secretKey;
+        } catch (Exception e) {
+            throw new SafencryptException("Unable to load desired key from the keystore");
         }
 
     }

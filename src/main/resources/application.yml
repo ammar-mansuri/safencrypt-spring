@@ -13,6 +13,8 @@ crypto-config:
       - AES_GCM_192_NoPadding
       - AES_GCM_256_NoPadding
 
+
+
   # List of Asymmetric Algorithms currently considered as Secure
   asymmetric-encryption:
     default-algo: RSA_ECB_2048_PKCS1Padding
@@ -21,13 +23,16 @@ crypto-config:
       - RSA_ECB_3072_PKCS1Padding
       - RSA_ECB_4096_PKCS1Padding
 
-  #ONLY SUPPORTS AES_CBC AS OF NOW
+
+
+  #ONLY SUPPORTS AES_CBC and AES_GCM AS OF NOW
   interoperability:
     languages:
       python:
         library-Provider: Crypto
         symmetric:
-          default-Algo: AES_CBC_256_PKCS7Padding
+          #          default-Algo: AES_CBC_256_PKCS7Padding
+          default-Algo: AES_GCM_256_NoPadding
           iv-bytes: 16
           resultant: BASE-64 #FIXED
       csharp:

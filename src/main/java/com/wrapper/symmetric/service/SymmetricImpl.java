@@ -23,6 +23,7 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.text.MessageFormat;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Random;
 
@@ -45,11 +46,11 @@ public class SymmetricImpl {
     }
 
     @SneakyThrows
-    protected SymmetricEncryptionBase64 interoperableEncrypt(SymmetricBuilder symmetricBuilder) {
+    protected SymmetricEncryptionBase64 interoperableEncrypt(SymmetricInteroperableBuilder symmetricBuilder) {
 
-        Objects.nonNull(symmetricBuilder.getSymmetricInteroperability());
+        Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
 
-        SymmetricInteroperabilityConfig.Details languageDetails = symmetricInteroperabilityConfig.languageDetails(symmetricBuilder.getSymmetricInteroperability().name());
+        SymmetricInteroperabilityConfig.Details languageDetails = symmetricInteroperabilityConfig.languageDetails(symmetricBuilder.getSymmetricInteroperabilityLanguages().name());
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
@@ -65,11 +66,54 @@ public class SymmetricImpl {
 //        languageDetails.symmetric().Resultant();
 
         SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
-        SymmetricEncryptionResult symmetricEncryptionResult = encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, secretKey, symmetricBuilder.getPlaintext());
+
+        SymmetricEncryptionResult symmetricEncryptionResult;
+
+        if (isGCM(symmetricAlgorithm)) {
+            symmetricEncryptionResult = encryptWithGCM(symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
+        } else {
+            symmetricEncryptionResult = encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText());
+        }
 
         String alias = "alias_" + System.currentTimeMillis();
         symmetricKeyStore.saveKey(alias, secretKey);
         return Utility.getSymmetricEncodedResult(symmetricEncryptionResult, alias);
+
+    }
+
+    @SneakyThrows
+    protected SymmetricDecryptionResult interoperableDecrypt(SymmetricInteroperableBuilder symmetricBuilder) {
+
+        Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
+
+        SymmetricInteroperabilityConfig.Details languageDetails = symmetricInteroperabilityConfig.languageDetails(symmetricBuilder.getSymmetricInteroperabilityLanguages().name());
+
+        SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
+
+        SymmetricEncryptionResult symmetricEncryptionResult;
+
+        byte[] cipherBytes;
+
+        if (symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
+
+            byte[] ciphertextBytes = Base64.getDecoder().decode(symmetricBuilder.getCipherText());
+            byte[] tagBytes = Base64.getDecoder().decode(symmetricBuilder.getAssociatedData());
+            cipherBytes = new byte[ciphertextBytes.length + tagBytes.length];
+            System.arraycopy(ciphertextBytes, 0, cipherBytes, 0, ciphertextBytes.length);
+            System.arraycopy(tagBytes, 0, cipherBytes, ciphertextBytes.length, tagBytes.length);
+
+        } else {
+
+            cipherBytes = Base64.getDecoder().decode(symmetricBuilder.getCipherText());
+        }
+
+        symmetricEncryptionResult = new SymmetricEncryptionResult(
+                Base64.getDecoder().decode(symmetricBuilder.getIv()),
+                symmetricKeyStore.loadKey(symmetricBuilder.getKeyAlias()).getEncoded(),
+                cipherBytes,
+                symmetricAlgorithm);
+
+        return decrypt(symmetricEncryptionResult, symmetricBuilder.getAssociatedData());
 
     }
 
@@ -88,10 +132,10 @@ public class SymmetricImpl {
         }
 
         if (isGCM(symmetricBuilder.getSymmetricAlgorithm())) {
-            return encryptWithGCM(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlaintext(), symmetricBuilder.getAssociatedData());
+            return encryptWithGCM(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
         }
 
-        return encrypt(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlaintext());
+        return encrypt(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText());
     }
 
 
