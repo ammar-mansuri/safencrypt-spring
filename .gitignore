@@ -4,7 +4,7 @@
 *.jks
 *.jceks
 *.p12
-application-keystore.yml
+#application-keystore.yml
 /Python/
 
 # Log files

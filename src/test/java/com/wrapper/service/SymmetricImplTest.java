@@ -7,26 +7,20 @@ import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 import com.wrapper.symmetric.service.SymmetricEncryptionBuilder;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
-import com.wrapper.symmetric.service.SymmetricKeyStore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.crypto.AEADBadTagException;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 import static com.wrapper.symmetric.utils.Utility.getSimpleAlgorithm;
 
 
 @SpringBootTest(classes = {Application.class})
 public class SymmetricImplTest {
-
-    @Autowired
-    private SymmetricKeyStore symmetricKeyStore;
-
+    
     @Test
     public void testSymmetricEncryptionUsingAllDefaults() {
 
@@ -110,7 +104,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithOutAuthenticationTag() {
+    public void testSymmetricEncryptionUsingGcmithoutAssociateData() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_256_PKCS5Padding;
 
@@ -133,7 +127,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithAuthenticationTag() {
+    public void testSymmetricEncryptionUsingGcmWithAssociateData() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_128_NoPadding;
 
@@ -161,17 +155,17 @@ public class SymmetricImplTest {
     @Test
     public void testSymmetricEncryptionUsingInsecureAlgorithm() {
 
-        Assertions.assertThrows(SafencryptException.class, () -> {
-            SymmetricEncryptionBuilder.encryptWithDefaultKeyGen(SymmetricAlgorithm.AES_CBC_128_NoPadding)
-                    .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
-                    .encrypt();
-        });
+        Assertions.assertThrows(SafencryptException.class, () ->
+                SymmetricEncryptionBuilder.encryptWithDefaultKeyGen(SymmetricAlgorithm.AES_CBC_128_NoPadding)
+                        .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
+                        .encrypt()
+        );
 
     }
 
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithTagMismatch() {
+    public void testSymmetricEncryptionUsingGcmWithTagMismatch() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_128_NoPadding;
 
