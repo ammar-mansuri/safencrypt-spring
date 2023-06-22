@@ -15,16 +15,6 @@ crypto-config:
 
 
 
-  # List of Asymmetric Algorithms currently considered as Secure
-  asymmetric-encryption:
-    default-algo: RSA_ECB_2048_PKCS1Padding
-    algorithms:
-      - RSA_ECB_2048_PKCS1Padding
-      - RSA_ECB_3072_PKCS1Padding
-      - RSA_ECB_4096_PKCS1Padding
-
-
-
   #ONLY SUPPORTS AES_CBC and AES_GCM AS OF NOW
   interoperability:
     languages:
