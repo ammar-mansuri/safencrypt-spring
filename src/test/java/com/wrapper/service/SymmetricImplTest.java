@@ -5,30 +5,41 @@ import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.service.SymmetricBuilder;
+import com.wrapper.symmetric.service.SymmetricEncryptionBuilder;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
+import com.wrapper.symmetric.service.SymmetricKeyStore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.crypto.AEADBadTagException;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import static com.wrapper.symmetric.utils.Utility.getSimpleAlgorithm;
 
 
 @SpringBootTest(classes = {Application.class})
 public class SymmetricImplTest {
 
+    @Autowired
+    private SymmetricKeyStore symmetricKeyStore;
 
     @Test
     public void testSymmetricEncryptionUsingAllDefaults() {
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder()
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryptWithDefaultKeyGen()
                 .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
 
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption()
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext())
+                .decrypt();
 
         Assertions.assertEquals("Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
 
@@ -39,13 +50,16 @@ public class SymmetricImplTest {
     public void testSymmetricEncryptionUsingDefaultAlgorithm() {
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder()
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption()
                 .key(SymmetricKeyGenerator.generateSymmetricKey())
                 .plaintext("Hello World 121@#".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption()
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext())
+                .decrypt();
 
 
         Assertions.assertEquals("Hello World 121@#", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
@@ -56,12 +70,16 @@ public class SymmetricImplTest {
     public void testSymmetricEncryptionUsingDefaultKey() {
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_GCM_256_NoPadding)
-                .plaintext("1232F #$$^%$^ Hello World".getBytes(StandardCharsets.UTF_8))
-                .encrypt();
+        SymmetricEncryptionResult symmetricEncryptionResult =
+                SymmetricEncryptionBuilder.encryptWithDefaultKeyGen(SymmetricAlgorithm.AES_GCM_256_NoPadding)
+                        .plaintext("1232F #$$^%$^ Hello World".getBytes(StandardCharsets.UTF_8))
+                        .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(symmetricEncryptionResult.symmetricAlgorithm())
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext())
+                .decrypt();
 
 
         Assertions.assertEquals("1232F #$$^%$^ Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
@@ -75,13 +93,16 @@ public class SymmetricImplTest {
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(symmetricAlgorithm)
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
                 .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(symmetricEncryptionResult.symmetricAlgorithm())
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext())
+                .decrypt();
 
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
@@ -89,19 +110,22 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGcmWithoutAssociatedData() {
+    public void testSymmetricEncryptionUsingGCMWithOutAuthenticationTag() {
 
-        SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_256_NoPadding;
+        SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_CBC_256_PKCS5Padding;
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(symmetricAlgorithm)
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
                 .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(symmetricEncryptionResult.symmetricAlgorithm())
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext())
+                .decrypt();
 
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
@@ -109,7 +133,7 @@ public class SymmetricImplTest {
     }
 
     @Test
-    public void testSymmetricEncryptionUsingGCMWithAssociatedData() {
+    public void testSymmetricEncryptionUsingGCMWithAuthenticationTag() {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_128_NoPadding;
 
@@ -118,15 +142,16 @@ public class SymmetricImplTest {
         byte[] associatedData = "First test using AEAD".getBytes(StandardCharsets.UTF_8);
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(symmetricAlgorithm)
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
                 .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
-                .plaintext(plainText)
-                .optionalAssociatedData(associatedData)
+                .plaintext(plainText, associatedData)
                 .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .optionalAssociatedData(associatedData)
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(symmetricEncryptionResult.symmetricAlgorithm())
+                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                .iv(symmetricEncryptionResult.iv())
+                .cipherText(symmetricEncryptionResult.ciphertext(), associatedData)
+                .decrypt();
 
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
@@ -137,10 +162,11 @@ public class SymmetricImplTest {
     public void testSymmetricEncryptionUsingInsecureAlgorithm() {
 
         Assertions.assertThrows(SafencryptException.class, () -> {
-            SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_CBC_128_NoPadding)
+            SymmetricEncryptionBuilder.encryptWithDefaultKeyGen(SymmetricAlgorithm.AES_CBC_128_NoPadding)
                     .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
                     .encrypt();
         });
+
     }
 
 
@@ -154,20 +180,19 @@ public class SymmetricImplTest {
         byte[] associatedData = "First test using AEAD".getBytes(StandardCharsets.UTF_8);
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(symmetricAlgorithm)
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
                 .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
-                .plaintext(plainText)
-                .optionalAssociatedData(associatedData)
+                .plaintext(plainText, associatedData)
                 .encrypt();
 
 
         byte[] associatedDataModified = "First test using AEADD".getBytes(StandardCharsets.UTF_8);
 
         Assertions.assertThrows(AEADBadTagException.class, () ->
-                SymmetricBuilder.createDecryptionBuilder()
-                        .optionalAssociatedData(associatedDataModified)
-                        .decrypt(symmetricEncryptionResult));
+                SymmetricEncryptionBuilder.decryption(symmetricEncryptionResult.symmetricAlgorithm())
+                        .key(new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
+                        .iv(symmetricEncryptionResult.iv())
+                        .cipherText(symmetricEncryptionResult.ciphertext(), associatedDataModified)
+                        .decrypt());
     }
-
-
 }

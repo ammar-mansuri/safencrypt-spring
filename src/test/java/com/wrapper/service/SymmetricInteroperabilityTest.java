@@ -6,15 +6,18 @@ import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.service.SymmetricBuilder;
+import com.wrapper.symmetric.service.SymmetricEncryptionBuilder;
 import com.wrapper.symmetric.service.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+
+import static com.wrapper.symmetric.utils.Utility.getSimpleAlgorithm;
 
 @SpringBootTest(classes = {Application.class})
 public class SymmetricInteroperabilityTest {
@@ -95,7 +98,7 @@ public class SymmetricInteroperabilityTest {
         byte[] plainText = "Hello World JCA WRAPPER Encrypt For Python".getBytes(StandardCharsets.UTF_8);
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricBuilder.createEncryptionBuilder(SymmetricAlgorithm.AES_GCM_256_NoPadding)
+        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
                 .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
@@ -114,14 +117,11 @@ public class SymmetricInteroperabilityTest {
         System.arraycopy(ciphertextBytes, 0, ciphertextTagBytes, 0, ciphertextBytes.length);
         System.arraycopy(tagBytes, 0, ciphertextTagBytes, ciphertextBytes.length, tagBytes.length);
 
-
-        SymmetricEncryptionResult symmetricEncryptionResult = new SymmetricEncryptionResult(Base64.getDecoder().decode("MXA8iL1gvl6i7Qx6".getBytes()),
-                Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()),
-                ciphertextTagBytes,
-                SymmetricAlgorithm.AES_GCM_128_NoPadding);
-
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricBuilder.createDecryptionBuilder()
-                .decrypt(symmetricEncryptionResult);
+        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
+                .key(new SecretKeySpec(Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()), getSimpleAlgorithm(SymmetricAlgorithm.AES_GCM_128_NoPadding)))
+                .iv(Base64.getDecoder().decode("MXA8iL1gvl6i7Qx6".getBytes()))
+                .cipherText(ciphertextTagBytes)
+                .decrypt();
 
         Assertions.assertEquals("Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
 

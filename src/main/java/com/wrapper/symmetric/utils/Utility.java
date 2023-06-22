@@ -43,4 +43,9 @@ public class Utility {
                 symmetricEncryptionResult.symmetricAlgorithm());
     }
 
+    public static boolean isGCM(SymmetricAlgorithm symmetricAlgorithm) {
+
+        return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
+    }
+
 }

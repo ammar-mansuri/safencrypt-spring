@@ -11,6 +11,10 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
+
+import static java.util.Objects.requireNonNull;
+
 @Component
 public class SymmetricInteroperableBuilder {
 
@@ -95,6 +99,7 @@ public class SymmetricInteroperableBuilder {
         }
 
         public InteroperablePlaintextBuilder plaintext(byte[] plaintext) {
+            requireNonNull(plaintext);
             encryption.plainText = plaintext;
             return new InteroperablePlaintextBuilder(encryption);
         }
