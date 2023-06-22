@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 
+import static java.util.Objects.requireNonNull;
+
 @Component
 public class SymmetricBuilder {
 
@@ -138,7 +140,7 @@ public class SymmetricBuilder {
 
         @SneakyThrows
         public SymmetricDecryptionResult decrypt(SymmetricEncryptionResult symmetricEncryptionResult) {
-
+            requireNonNull(encryption);
             if (encryption.associatedData != null && !symmetricEncryptionResult.symmetricAlgorithm().getLabel().startsWith("AES_GCM")) {
                 throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             }
