@@ -58,21 +58,14 @@ public class SymmetricImpl {
             throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", languageDetails.symmetric().defaultAlgo()));
         }
 
-//        languageDetails.libraryProvider();
-//        languageDetails.symmetric().defaultAlgo();
-//        languageDetails.symmetric().ivBytes();
-//        languageDetails.symmetric().keyBytes();
-//        languageDetails.symmetric().encoding();
-//        languageDetails.symmetric().Resultant();
-
         SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
         SymmetricEncryptionResult symmetricEncryptionResult;
 
         if (isGCM(symmetricAlgorithm)) {
-            symmetricEncryptionResult = encryptWithGCM(symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
+            symmetricEncryptionResult = encryptWithGCM(languageDetails.symmetric().tagLength(), languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
         } else {
-            symmetricEncryptionResult = encrypt(Integer.valueOf(languageDetails.symmetric().ivBytes()), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText());
+            symmetricEncryptionResult = encrypt(languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText());
         }
 
         String alias = "alias_" + System.currentTimeMillis();
@@ -132,7 +125,7 @@ public class SymmetricImpl {
         }
 
         if (isGCM(symmetricBuilder.getSymmetricAlgorithm())) {
-            return encryptWithGCM(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
+            return encryptWithGCM(GCM_TAG_LENGTH, GCM_IV_SIZE, symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
         }
 
         return encrypt(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText());
@@ -145,7 +138,7 @@ public class SymmetricImpl {
     }
 
     @SneakyThrows
-    private SymmetricEncryptionResult encrypt(int IV_LENGTH, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
+    private SymmetricEncryptionResult encrypt(int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
 
 
         Cipher cipher;
@@ -163,7 +156,7 @@ public class SymmetricImpl {
         }
 
 
-        final IvParameterSpec ivSpec = generateIv(IV_LENGTH);
+        final IvParameterSpec ivSpec = generateIv(ivSize);
 
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
@@ -174,13 +167,13 @@ public class SymmetricImpl {
 
 
     @SneakyThrows
-    private SymmetricEncryptionResult encryptWithGCM(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) {
+    private SymmetricEncryptionResult encryptWithGCM(int tagLength, int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) {
 
         final Cipher cipher = Cipher.getInstance(Utility.getAlgorithmForCipher(symmetricAlgorithm));
 
-        final IvParameterSpec ivSpec = generateIv(GCM_IV_SIZE);
+        final IvParameterSpec ivSpec = generateIv(ivSize);
 
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH, ivSpec.getIV()));
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(tagLength, ivSpec.getIV()));
 
         if (associatedData != null && associatedData.length > 0) {
             cipher.updateAAD(associatedData);

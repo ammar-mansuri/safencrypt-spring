@@ -20,8 +20,7 @@ public record SymmetricInteroperabilityConfig(Map<String, Details> languages) {
 
     public record Details(String libraryProvider, Symmetric symmetric) {
 
-        public record Symmetric(String defaultAlgo, String ivBytes,
-                                String resultant) {
+        public record Symmetric(String defaultAlgo, Integer ivBytes, Integer tagLength, String resultant) {
         }
     }
 
