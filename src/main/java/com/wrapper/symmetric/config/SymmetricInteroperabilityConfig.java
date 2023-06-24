@@ -12,10 +12,9 @@ public record SymmetricInteroperabilityConfig(Map<String, Details> languages) {
 
     public Details languageDetails(String key) throws SafencryptException {
         return languages.entrySet().stream().filter(x -> x.getKey().equalsIgnoreCase(key))
-                .map(x -> x.getValue())
+                .map(Map.Entry::getValue)
                 .findFirst()
                 .orElseThrow(() -> new SafencryptException("Unable to find Interoperability Configuration for the selected language"));
-
     }
 
     public record Details(String libraryProvider, Symmetric symmetric) {

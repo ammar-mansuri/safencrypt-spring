@@ -1,13 +1,14 @@
 package com.wrapper.symmetric.service;
 
 import com.wrapper.exceptions.SafencryptException;
+import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
+import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.utils.Base64Decoder;
 import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -21,11 +22,10 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.Security;
 import java.text.MessageFormat;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Random;
 
 import static com.wrapper.symmetric.utils.Base64Decoder.decodeBase64;
 import static com.wrapper.symmetric.utils.Utility.*;
@@ -33,9 +33,9 @@ import static com.wrapper.symmetric.utils.Utility.*;
 @Service
 public class SymmetricImpl {
 
-    private final int GCM_TAG_LENGTH = 96;
-    private final int GCM_IV_SIZE = 12;
-    private final int REST_IV_SIZE = 16;
+    private static final int GCM_TAG_LENGTH = 96;
+    private static final int GCM_IV_SIZE = 12;
+    private static final int REST_IV_SIZE = 16;
     private final SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
     private final SymmetricConfig symmetricConfig;
 
@@ -49,7 +49,7 @@ public class SymmetricImpl {
     }
 
     @SneakyThrows
-    protected SymmetricEncryptionBase64 interoperableEncrypt(SymmetricInteroperableBuilder symmetricBuilder) {
+    public SymmetricEncryptionBase64 interoperableEncrypt(SymmetricInteroperableBuilder symmetricBuilder) {
 
         Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
 
@@ -57,9 +57,7 @@ public class SymmetricImpl {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
-        if (!isAlgorithmSecure(symmetricAlgorithm.getLabel())) {
-            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", languageDetails.symmetric().defaultAlgo()));
-        }
+        isAlgorithmSecure(symmetricAlgorithm.getLabel());
 
         SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
@@ -78,7 +76,7 @@ public class SymmetricImpl {
     }
 
     @SneakyThrows
-    protected SymmetricDecryptionResult interoperableDecrypt(SymmetricInteroperableBuilder symmetricBuilder) {
+    public SymmetricDecryptionResult interoperableDecrypt(SymmetricInteroperableBuilder symmetricBuilder) {
 
         Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
 
@@ -114,28 +112,28 @@ public class SymmetricImpl {
     }
 
     @SneakyThrows
-    protected SymmetricEncryptionResult encrypt(SymmetricEncryptionBuilder symmetricBuilder) {
+    public SymmetricEncryptionResult encrypt(SymmetricEncryptionBuilder symmetricBuilder) {
 
-        if (!isAlgorithmSecure(symmetricBuilder.getSymmetricAlgorithm().getLabel())) {
-            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricBuilder.getSymmetricAlgorithm().getLabel()));
-        }
+        SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(symmetricBuilder.getSymmetricAlgorithm().getLabel());
+
+        isAlgorithmSecure(symmetricAlgorithm.getLabel());
 
         SecretKey secretKey = symmetricBuilder.getKey();
 
         if (!isKeyDefined(symmetricBuilder)) {
-
-            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricBuilder.getSymmetricAlgorithm());
+            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
         }
 
-        if (isGCM(symmetricBuilder.getSymmetricAlgorithm())) {
+        if (isGCM(symmetricAlgorithm)) {
             return encryptWithGCM(GCM_TAG_LENGTH, GCM_IV_SIZE, symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
         }
+
+        checkKeyLength(secretKey, symmetricAlgorithm);
 
         return encrypt(symmetricBuilder.getSymmetricAlgorithm(), secretKey, symmetricBuilder.getPlainText());
     }
 
-
-    private SymmetricEncryptionResult encrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) throws Exception {
+    private SymmetricEncryptionResult encrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
 
         return encrypt(REST_IV_SIZE, symmetricAlgorithm, secretKey, plaintext);
     }
@@ -190,15 +188,13 @@ public class SymmetricImpl {
     @SneakyThrows
     protected SymmetricDecryptionResult decrypt(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) {
         SymmetricAlgorithm algorithm = symmetricEncryptionResult.symmetricAlgorithm();
-        if (!isAlgorithmSecure(algorithm.getLabel())) {
-            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricEncryptionResult.symmetricAlgorithm().getLabel()));
-        }
-
+        isAlgorithmSecure(algorithm.getLabel());
         return isGCM(algorithm) ?
                 decryptWithGCM(symmetricEncryptionResult, associatedData) : decryptRest(symmetricEncryptionResult);
     }
 
-    private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionResult symmetricEncryptionResult) throws Exception {
+    @SneakyThrows
+    private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionResult symmetricEncryptionResult) {
 
         Cipher cipher;
 
@@ -215,7 +211,7 @@ public class SymmetricImpl {
         }
 
 
-        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
+        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), getKeyAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
 
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(symmetricEncryptionResult.iv()));
 
@@ -224,11 +220,12 @@ public class SymmetricImpl {
         return new SymmetricDecryptionResult(plaintext, symmetricEncryptionResult.symmetricAlgorithm());
     }
 
-    private SymmetricDecryptionResult decryptWithGCM(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) throws Exception {
+    @SneakyThrows
+    private SymmetricDecryptionResult decryptWithGCM(final SymmetricEncryptionResult symmetricEncryptionResult, byte[] associatedData) {
 
         final Cipher cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricEncryptionResult.symmetricAlgorithm()));
 
-        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), getSimpleAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
+        final SecretKey secretKey = new SecretKeySpec(symmetricEncryptionResult.key(), getKeyAlgorithm(symmetricEncryptionResult.symmetricAlgorithm()));
 
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH, symmetricEncryptionResult.iv()));
 
@@ -244,15 +241,14 @@ public class SymmetricImpl {
 
 
     @SneakyThrows
-    protected SymmetricDecryptionResult decrypt(SymmetricEncryptionBuilder symmetricBuilder) {
+    public SymmetricDecryptionResult decrypt(SymmetricEncryptionBuilder symmetricBuilder) {
         SymmetricAlgorithm algorithm = symmetricBuilder.getSymmetricAlgorithm();
-        if (!isAlgorithmSecure(algorithm.getLabel())) {
-            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricBuilder.getSymmetricAlgorithm().getLabel()));
-        }
+        isAlgorithmSecure(algorithm.getLabel());
         return isGCM(algorithm) ? decryptWithGCM(symmetricBuilder) : decryptRest(symmetricBuilder);
     }
 
-    private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionBuilder encryptionBuilder) throws Exception {
+    @SneakyThrows
+    private SymmetricDecryptionResult decryptRest(final SymmetricEncryptionBuilder encryptionBuilder) {
         Cipher cipher;
         String algorithm = getAlgorithmForCipher(encryptionBuilder.getSymmetricAlgorithm());
         try {
@@ -265,7 +261,7 @@ public class SymmetricImpl {
                 throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", encryptionBuilder.getSymmetricAlgorithm().getLabel()));
             }
         }
-        final SecretKey secretKey = new SecretKeySpec(encryptionBuilder.getKey().getEncoded(), getSimpleAlgorithm(encryptionBuilder.getSymmetricAlgorithm()));
+        final SecretKey secretKey = new SecretKeySpec(encryptionBuilder.getKey().getEncoded(), getKeyAlgorithm(encryptionBuilder.getSymmetricAlgorithm()));
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(encryptionBuilder.getIv()));
         final byte[] plaintext = cipher.doFinal(encryptionBuilder.getCipherText());
         return new SymmetricDecryptionResult(plaintext, encryptionBuilder.getSymmetricAlgorithm());
@@ -273,7 +269,7 @@ public class SymmetricImpl {
 
     private SymmetricDecryptionResult decryptWithGCM(final SymmetricEncryptionBuilder encryptionBuilder) throws Exception {
         final Cipher cipher = Cipher.getInstance(getAlgorithmForCipher(encryptionBuilder.getSymmetricAlgorithm()));
-        final SecretKey secretKey = new SecretKeySpec(encryptionBuilder.getKey().getEncoded(), getSimpleAlgorithm(encryptionBuilder.getSymmetricAlgorithm()));
+        final SecretKey secretKey = new SecretKeySpec(encryptionBuilder.getKey().getEncoded(), getKeyAlgorithm(encryptionBuilder.getSymmetricAlgorithm()));
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH, encryptionBuilder.getIv()));
         final byte[] associatedData = encryptionBuilder.getAssociatedData();
         if (associatedData != null && associatedData.length > 0) cipher.updateAAD(associatedData);
@@ -281,23 +277,27 @@ public class SymmetricImpl {
         return new SymmetricDecryptionResult(plaintext, encryptionBuilder.getSymmetricAlgorithm());
     }
 
-
-    private boolean isKeyDefined(SymmetricEncryptionBuilder symmetricBuilder) {
-        return symmetricBuilder.getKey() != null && symmetricBuilder.getKey().getEncoded().length > 0;
+    @SneakyThrows
+    public void isAlgorithmSecure(String symmetricAlgorithm) {
+        if (!symmetricConfig.algorithms().contains(symmetricAlgorithm)) {
+            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricAlgorithm));
+        }
     }
 
-    private IvParameterSpec generateIv(int IV_LENGTH) {
+    @SneakyThrows
+    public void checkKeyLength(SecretKey secretKey, SymmetricAlgorithm symmetricAlgorithm) {
 
-        final byte[] iv = new byte[IV_LENGTH];
-        final Random random = new SecureRandom();
-        random.nextBytes(iv);
-        final IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        return ivSpec;
+        final int keyLength = secretKey.getEncoded().length * 8;
+        HashSet<Integer> allowedKeyLength = new HashSet<>() {{
+            add(128);
+            add(192);
+            add(256);
+        }};
+
+        if (!allowedKeyLength.contains(keyLength)) {
+            throw new SafencryptException(MessageFormat.format("Provided Key With Length [{0}] bits is not compatible with selected algorithm [{1}] ", keyLength, symmetricAlgorithm.getLabel()));
+        }
+
     }
-
-    public boolean isAlgorithmSecure(String symmetricAlgorithm) {
-        return symmetricConfig.algorithms().contains(symmetricAlgorithm);
-    }
-
 
 }

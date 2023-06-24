@@ -1,9 +1,10 @@
-package com.wrapper.symmetric.service;
+package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import com.wrapper.symmetric.service.SymmetricImpl;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,9 +80,9 @@ public class SymmetricEncryptionBuilder {
         return new PlaintextBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
-    public static KeyBuilder encryption(SymmetricAlgorithm... symmetricAlgorithm) {
+    public static KeyBuilder encryption(SymmetricAlgorithm symmetricAlgorithm) {
         encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
-        return new KeyBuilder(encryption, symmetricAlgorithm[0]);
+        return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static PlaintextBuilder encryptWithDefaultKeyGen(SymmetricAlgorithm symmetricAlgorithm) {
@@ -129,19 +130,19 @@ public class SymmetricEncryptionBuilder {
 
 
         @SneakyThrows
-        public EncryptionBulder plaintext(byte[] plaintext) {
+        public EncryptionBuilder plaintext(byte[] plaintext) {
             requireNonNull(plaintext);
             encryption.plainText = plaintext;
-            return new EncryptionBulder(encryption);
+            return new EncryptionBuilder(encryption);
         }
 
         @SneakyThrows
-        public EncryptionBulder plaintext(byte[] plaintext, byte[] associatedData) {
+        public EncryptionBuilder plaintext(byte[] plaintext, byte[] associatedData) {
             if (!isGCM(encryption.symmetricAlgorithm))
                 throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             encryption.plainText = plaintext;
             encryption.associatedData = associatedData;
-            return new EncryptionBulder(encryption);
+            return new EncryptionBuilder(encryption);
         }
 
     }
@@ -183,27 +184,27 @@ public class SymmetricEncryptionBuilder {
         }
 
         @SneakyThrows
-        public DecryptionBulder cipherText(byte[] cipherText) {
+        public DecryptionBuilder cipherText(byte[] cipherText) {
             requireNonNull(cipherText);
             encryption.cipherText = cipherText;
-            return new DecryptionBulder(encryption);
+            return new DecryptionBuilder(encryption);
         }
 
         @SneakyThrows
-        public DecryptionBulder cipherText(byte[] cipherText, byte[] associatedData) {
+        public DecryptionBuilder cipherText(byte[] cipherText, byte[] associatedData) {
             if (!isGCM(encryption.symmetricAlgorithm))
                 throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
             encryption.cipherText = cipherText;
             encryption.associatedData = associatedData;
-            return new DecryptionBulder(encryption);
+            return new DecryptionBuilder(encryption);
         }
 
     }
 
-    public static class EncryptionBulder {
+    public static class EncryptionBuilder {
         private SymmetricEncryptionBuilder encryption;
 
-        private EncryptionBulder(SymmetricEncryptionBuilder encryption) {
+        private EncryptionBuilder(SymmetricEncryptionBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -213,10 +214,10 @@ public class SymmetricEncryptionBuilder {
         }
     }
 
-    public static class DecryptionBulder {
+    public static class DecryptionBuilder {
         private SymmetricEncryptionBuilder encryption;
 
-        private DecryptionBulder(SymmetricEncryptionBuilder encryption) {
+        private DecryptionBuilder(SymmetricEncryptionBuilder encryption) {
             this.encryption = encryption;
         }
 

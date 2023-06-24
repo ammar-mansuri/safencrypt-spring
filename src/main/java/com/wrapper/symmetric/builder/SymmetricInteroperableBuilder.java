@@ -1,4 +1,4 @@
-package com.wrapper.symmetric.service;
+package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
@@ -6,12 +6,11 @@ import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
+import com.wrapper.symmetric.service.SymmetricImpl;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Base64;
 
 import static java.util.Objects.requireNonNull;
 

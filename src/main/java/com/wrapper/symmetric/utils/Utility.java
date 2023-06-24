@@ -1,14 +1,18 @@
 package com.wrapper.symmetric.utils;
 
+import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.models.SymmetricEncryptionResult;
 
+import javax.crypto.spec.IvParameterSpec;
+import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Random;
 
 public class Utility {
 
-    public static String getSimpleAlgorithm(SymmetricAlgorithm symmetricAlgorithm) {
+    public static String getKeyAlgorithm(SymmetricAlgorithm symmetricAlgorithm) {
 
         return symmetricAlgorithm.getLabel().split("_")[0];
     }
@@ -25,7 +29,7 @@ public class Utility {
         return symmetricAlgorithm.getLabel().split("_")[1];
     }
 
-    public static Integer getAlgorithmBytes(SymmetricAlgorithm symmetricAlgorithm) {
+    public static Integer getKeySize(SymmetricAlgorithm symmetricAlgorithm) {
 
         return Integer.valueOf(symmetricAlgorithm.getLabel().split("_")[2]);
     }
@@ -47,5 +51,19 @@ public class Utility {
 
         return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
     }
+
+    public static boolean isKeyDefined(SymmetricEncryptionBuilder symmetricBuilder) {
+        return symmetricBuilder.getKey() != null && symmetricBuilder.getKey().getEncoded().length > 0;
+    }
+
+    public static IvParameterSpec generateIv(int IV_LENGTH) {
+
+        final byte[] iv = new byte[IV_LENGTH];
+        final Random random = new SecureRandom();
+        random.nextBytes(iv);
+        final IvParameterSpec ivSpec = new IvParameterSpec(iv);
+        return ivSpec;
+    }
+
 
 }

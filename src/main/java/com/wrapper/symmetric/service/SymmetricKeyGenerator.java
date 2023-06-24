@@ -18,8 +18,8 @@ public class SymmetricKeyGenerator {
     @SneakyThrows
     public static SecretKey generateSymmetricKey(SymmetricAlgorithm symmetricAlgorithm) {
 
-        KeyGenerator kg = KeyGenerator.getInstance(Utility.getSimpleAlgorithm(symmetricAlgorithm));
-        kg.init(Utility.getAlgorithmBytes(symmetricAlgorithm));
+        KeyGenerator kg = KeyGenerator.getInstance(Utility.getKeyAlgorithm(symmetricAlgorithm));
+        kg.init(Utility.getKeySize(symmetricAlgorithm));
         return kg.generateKey();
     }
 
