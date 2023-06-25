@@ -7,6 +7,7 @@ import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
 import com.wrapper.symmetric.models.SymmetricDecryptionResult;
 import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
 import com.wrapper.symmetric.service.SymmetricImpl;
+import com.wrapper.symmetric.service.SymmetricInteroperable;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class SymmetricInteroperableBuilder {
 
     private SymmetricImpl symmetricImpl;
 
+    private SymmetricInteroperable symmetricInteroperable;
+
     private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
 
     private SymmetricInteroperableBuilder() {
@@ -37,15 +40,17 @@ public class SymmetricInteroperableBuilder {
     }
 
     @Autowired
-    private SymmetricInteroperableBuilder(SymmetricImpl symmetricImpl, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig) {
+    private SymmetricInteroperableBuilder(SymmetricImpl symmetricImpl, SymmetricInteroperable symmetricInteroperable, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig) {
         encryption = new SymmetricInteroperableBuilder();
         this.symmetricImpl = symmetricImpl;
+        this.symmetricInteroperable = symmetricInteroperable;
         this.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
     }
 
     @PostConstruct
     public void init() {
         encryption.symmetricImpl = symmetricImpl;
+        encryption.symmetricInteroperable = symmetricInteroperable;
         encryption.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
     }
 
@@ -79,12 +84,12 @@ public class SymmetricInteroperableBuilder {
     }
 
     public static InteroperableEncryptionBuilder createEncryptionBuilder(SymmetricInteroperabilityLanguages symmetricInteroperabilityLanguages) {
-        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperabilityConfig);
+        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig);
         return new InteroperableEncryptionBuilder(encryption, symmetricInteroperabilityLanguages);
     }
 
     public static InteroperableDBuilder createDecryptionBuilder(SymmetricInteroperabilityLanguages symmetricInteroperabilityLanguages) {
-        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperabilityConfig);
+        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig);
         return new InteroperableDBuilder(encryption, symmetricInteroperabilityLanguages);
     }
 
@@ -125,7 +130,7 @@ public class SymmetricInteroperableBuilder {
 
         @SneakyThrows
         public SymmetricEncryptionBase64 encrypt() {
-            return encryption.symmetricImpl.interoperableEncrypt(encryption);
+            return encryption.symmetricInteroperable.interoperableEncrypt(encryption);
         }
     }
 
@@ -212,7 +217,7 @@ public class SymmetricInteroperableBuilder {
 
         @SneakyThrows
         public SymmetricDecryptionResult decrypt() {
-            return encryption.symmetricImpl.interoperableDecrypt(encryption);
+            return encryption.symmetricInteroperable.interoperableDecrypt(encryption);
         }
 
     }

@@ -30,7 +30,6 @@ public class SymmetricEncryptionBuilder {
 
     private SymmetricImpl symmetricImpl;
 
-
     private SymmetricEncryptionBuilder() {
         // private constructor to enforce the use of builder pattern
     }
@@ -210,7 +209,18 @@ public class SymmetricEncryptionBuilder {
 
         @SneakyThrows
         public SymmetricEncryptionResult encrypt() {
-            return encryption.symmetricImpl.encrypt(encryption);
+
+            try {
+                return encryption.symmetricImpl.encrypt(encryption);
+            } catch (Exception e) {
+
+                if (e instanceof SafencryptException) {
+                    throw e;
+                }
+                throw new SafencryptException(e.getMessage(), e);
+
+            }
+
         }
     }
 
@@ -225,7 +235,14 @@ public class SymmetricEncryptionBuilder {
         public SymmetricDecryptionResult decrypt() {
             if (encryption.associatedData != null && !isGCM(encryption.symmetricAlgorithm))
                 throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
-            return encryption.symmetricImpl.decrypt(encryption);
+
+            try {
+                return encryption.symmetricImpl.decrypt(encryption);
+            } catch (Exception e) {
+                if (e instanceof SafencryptException)
+                    throw e;
+                throw new SafencryptException(e.getMessage(), e);
+            }
         }
     }
 }

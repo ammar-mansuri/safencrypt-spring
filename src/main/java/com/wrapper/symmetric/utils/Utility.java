@@ -47,6 +47,14 @@ public class Utility {
                 symmetricEncryptionResult.symmetricAlgorithm());
     }
 
+    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
+        return new SymmetricEncryptionBase64(
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.key()),
+                Base64.getEncoder().encodeToString(symmetricEncryptionResult.ciphertext()),
+                symmetricEncryptionResult.symmetricAlgorithm());
+    }
+
     public static boolean isGCM(SymmetricAlgorithm symmetricAlgorithm) {
 
         return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
