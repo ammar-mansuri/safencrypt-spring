@@ -44,7 +44,6 @@ public class SymmetricInteroperable {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
-        symmetric.isAlgorithmSecure(symmetricAlgorithm.getLabel());
 
         SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
@@ -71,14 +70,12 @@ public class SymmetricInteroperable {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
-        SymmetricEncryptionResult symmetricEncryptionResult;
-
         byte[] cipherBytes;
 
         if (symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
 
             byte[] ciphertextBytes = decodeBase64(symmetricBuilder.getCipherText());
-            byte[] tagBytes = decodeBase64(symmetricBuilder.getAssociatedData());
+            byte[] tagBytes = decodeBase64(symmetricBuilder.getTag());
             cipherBytes = new byte[ciphertextBytes.length + tagBytes.length];
             System.arraycopy(ciphertextBytes, 0, cipherBytes, 0, ciphertextBytes.length);
             System.arraycopy(tagBytes, 0, cipherBytes, ciphertextBytes.length, tagBytes.length);
@@ -88,13 +85,10 @@ public class SymmetricInteroperable {
             cipherBytes = decodeBase64(symmetricBuilder.getCipherText());
         }
 
-        symmetricEncryptionResult = new SymmetricEncryptionResult(
-                decodeBase64(symmetricBuilder.getIv()),
-                symmetricKeyStore.loadKey(symmetricBuilder.getKeyAlias()).getEncoded(),
-                cipherBytes,
-                symmetricAlgorithm);
 
-        return symmetric.decrypt(symmetricEncryptionResult, symmetricBuilder.getAssociatedData());
+        return isGCM(symmetricAlgorithm) ?
+                symmetric.decryptWithGCM(languageDetails.symmetric().tagLength(), symmetricAlgorithm, symmetricKeyStore.loadKey(symmetricBuilder.getKeyAlias()), decodeBase64(symmetricBuilder.getIv()), cipherBytes, symmetricBuilder.getAssociatedData()) :
+                symmetric.decrypt(symmetricAlgorithm, symmetricKeyStore.loadKey(symmetricBuilder.getKeyAlias()), decodeBase64(symmetricBuilder.getIv()), cipherBytes);
 
     }
 }
