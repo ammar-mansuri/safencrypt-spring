@@ -1,9 +1,9 @@
 package com.wrapper.symmetric.utils;
 
-import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
+import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricCipher;
 
 import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
@@ -39,20 +39,20 @@ public class Utility {
         return symmetricAlgorithm.getLabel().split("_")[3];
     }
 
-    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult, String keyAlias) {
-        return new SymmetricEncryptionBase64(
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
+    public static SymmetricCipherBase64 getSymmetricEncodedResult(final SymmetricCipher symmetricCipher, String keyAlias) {
+        return new SymmetricCipherBase64(
+                Base64.getEncoder().encodeToString(symmetricCipher.iv()),
                 keyAlias,
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.ciphertext()),
-                symmetricEncryptionResult.symmetricAlgorithm());
+                Base64.getEncoder().encodeToString(symmetricCipher.ciphertext()),
+                symmetricCipher.symmetricAlgorithm());
     }
 
-    public static SymmetricEncryptionBase64 getSymmetricEncodedResult(final SymmetricEncryptionResult symmetricEncryptionResult) {
-        return new SymmetricEncryptionBase64(
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.iv()),
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.key()),
-                Base64.getEncoder().encodeToString(symmetricEncryptionResult.ciphertext()),
-                symmetricEncryptionResult.symmetricAlgorithm());
+    public static SymmetricCipherBase64 getSymmetricEncodedResult(final SymmetricCipher symmetricCipher) {
+        return new SymmetricCipherBase64(
+                Base64.getEncoder().encodeToString(symmetricCipher.iv()),
+                Base64.getEncoder().encodeToString(symmetricCipher.key()),
+                Base64.getEncoder().encodeToString(symmetricCipher.ciphertext()),
+                symmetricCipher.symmetricAlgorithm());
     }
 
     public static boolean isGCM(SymmetricAlgorithm symmetricAlgorithm) {
@@ -60,7 +60,7 @@ public class Utility {
         return symmetricAlgorithm.getLabel().startsWith("AES_GCM");
     }
 
-    public static boolean isKeyDefined(SymmetricEncryptionBuilder symmetricBuilder) {
+    public static boolean isKeyDefined(SymmetricBuilder symmetricBuilder) {
         return symmetricBuilder.getKey() != null && symmetricBuilder.getKey().getEncoded().length > 0;
     }
 
@@ -69,8 +69,7 @@ public class Utility {
         final byte[] iv = new byte[IV_LENGTH];
         final Random random = new SecureRandom();
         random.nextBytes(iv);
-        final IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        return ivSpec;
+        return new IvParameterSpec(iv);
     }
 
 

@@ -4,8 +4,8 @@ import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
-import com.wrapper.symmetric.models.SymmetricDecryptionResult;
-import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
+import com.wrapper.symmetric.models.SymmetricPlain;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
 import com.wrapper.symmetric.service.SymmetricImpl;
 import com.wrapper.symmetric.service.SymmetricInteroperable;
 import jakarta.annotation.PostConstruct;
@@ -129,7 +129,7 @@ public class SymmetricInteroperableBuilder {
         }
 
         @SneakyThrows
-        public SymmetricEncryptionBase64 encrypt() {
+        public SymmetricCipherBase64 encrypt() {
             return encryption.symmetricInteroperable.interoperableEncrypt(encryption);
         }
     }
@@ -216,7 +216,7 @@ public class SymmetricInteroperableBuilder {
         }
 
         @SneakyThrows
-        public SymmetricDecryptionResult decrypt() {
+        public SymmetricPlain decrypt() {
             return encryption.symmetricInteroperable.interoperableDecrypt(encryption);
         }
 

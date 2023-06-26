@@ -1,10 +1,10 @@
 package com.wrapper.builder;
 
 import com.wrapper.Application;
-import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
+import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.service.SymmetricKeyGenerator;
+import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.service.KeyGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,24 +20,24 @@ class SymmetricBuilderBuilderTest {
 
     @Test
     void testBuilderAES_GCM() {
-        SymmetricEncryptionBuilder.encryption()
-                .key(SymmetricKeyGenerator.generateSymmetricKey())
+        SymmetricBuilder.encryption()
+                .key(KeyGenerator.generateSymmetricKey())
                 .plaintext("sda".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
 
     @Test
     void testBuilderAES_GCMWithAssociatedData() {
-        SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.DEFAULT)
-                .key(SymmetricKeyGenerator.generateSymmetricKey())
+        SymmetricBuilder.encryption(SymmetricAlgorithm.DEFAULT)
+                .key(KeyGenerator.generateSymmetricKey())
                 .plaintext("ds".getBytes(StandardCharsets.UTF_8), "ads".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
 
     @Test
     void testBuilderAES_CBC() {
-        SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
+        SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
+                .key(KeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
                 .plaintext("ds".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
@@ -46,20 +46,20 @@ class SymmetricBuilderBuilderTest {
     void testSettingAssociatedDataIncorrectAlgorithm() {
 
         Assertions.assertThrows(Exception.class, () -> {
-            SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
-                    .key(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
+            SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
+                    .key(KeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
                     .plaintext("asd".getBytes(StandardCharsets.UTF_8), "ads".getBytes(StandardCharsets.UTF_8))
                     .encrypt();
         });
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = new SymmetricEncryptionResult("iv".getBytes(StandardCharsets.UTF_8), "key".getBytes(StandardCharsets.UTF_8), "ciphertext".getBytes(StandardCharsets.UTF_8), SymmetricAlgorithm.AES_CBC_192_PKCS5Padding);
+        SymmetricCipher symmetricCipher = new SymmetricCipher("iv".getBytes(StandardCharsets.UTF_8), "key".getBytes(StandardCharsets.UTF_8), "ciphertext".getBytes(StandardCharsets.UTF_8), SymmetricAlgorithm.AES_CBC_192_PKCS5Padding);
 
         Assertions.assertThrows(Exception.class, () -> {
-            SymmetricEncryptionBuilder.decryption()
-                    .key(new SecretKeySpec(symmetricEncryptionResult.key(), getKeyAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
-                    .iv(symmetricEncryptionResult.iv())
-                    .cipherText(symmetricEncryptionResult.ciphertext(), "associatedData".getBytes(StandardCharsets.UTF_8))
+            SymmetricBuilder.decryption()
+                    .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                    .iv(symmetricCipher.iv())
+                    .cipherText(symmetricCipher.ciphertext(), "associatedData".getBytes(StandardCharsets.UTF_8))
                     .decrypt();
         });
 
@@ -69,16 +69,16 @@ class SymmetricBuilderBuilderTest {
     @Test
     void testBuilderForDefaultAlgorithm() {
 
-        SymmetricEncryptionResult symmetricEncryptionResult =
-                SymmetricEncryptionBuilder.encryptWithDefaultKeyGen()
+        SymmetricCipher symmetricCipher =
+                SymmetricBuilder.encryption().generateKey()
                         .plaintext("ammar".getBytes(StandardCharsets.UTF_8))
                         .encrypt();
 
-        SymmetricEncryptionBuilder
+        SymmetricBuilder
                 .decryption()
-                .key(new SecretKeySpec(symmetricEncryptionResult.key(), getKeyAlgorithm(symmetricEncryptionResult.symmetricAlgorithm())))
-                .iv(symmetricEncryptionResult.iv())
-                .cipherText(symmetricEncryptionResult.ciphertext())
+                .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                .iv(symmetricCipher.iv())
+                .cipherText(symmetricCipher.ciphertext())
                 .decrypt();
     }
 

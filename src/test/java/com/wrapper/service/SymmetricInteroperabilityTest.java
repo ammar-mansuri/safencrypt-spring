@@ -1,14 +1,14 @@
 package com.wrapper.service;
 
 import com.wrapper.Application;
-import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
+import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
-import com.wrapper.symmetric.models.SymmetricDecryptionResult;
-import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
-import com.wrapper.symmetric.service.SymmetricKeyGenerator;
+import com.wrapper.symmetric.models.SymmetricPlain;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.service.KeyGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,12 +27,12 @@ class SymmetricInteroperabilityTest {
 
         byte[] plainText = "Test for C# Which Uses Algorithm that Doesnt Ensure Integrity".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
+        SymmetricCipherBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
                 .createEncryptionBuilder(SymmetricInteroperabilityLanguages.CSharp)
                 .plaintext(plainText)
                 .encrypt();
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricInteroperableBuilder
+        SymmetricPlain symmetricPlain = SymmetricInteroperableBuilder
                 .createDecryptionBuilder(SymmetricInteroperabilityLanguages.CSharp)
                 .keyAlias(symmetricEncryptionResult.keyAlias())
                 .ivBase64(symmetricEncryptionResult.iv())
@@ -40,7 +40,7 @@ class SymmetricInteroperabilityTest {
                 .decrypt();
 
 
-        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
         System.out.println(symmetricEncryptionResult);
     }
 
@@ -51,7 +51,7 @@ class SymmetricInteroperabilityTest {
         byte[] plainText = "TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8);
         byte[] associatedData = "First test using AEAD".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
+        SymmetricCipherBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
                 .createEncryptionBuilder(SymmetricInteroperabilityLanguages.Python)
                 .plaintext(plainText)
                 .optionalAssociatedData(associatedData)
@@ -67,7 +67,7 @@ class SymmetricInteroperabilityTest {
         byte[] plainText = "TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8);
         byte[] associatedData = "First test using AEAD".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
+        SymmetricCipherBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
                 .createEncryptionBuilder(SymmetricInteroperabilityLanguages.Python)
                 .plaintext(plainText)
                 .optionalAssociatedData(associatedData)
@@ -82,7 +82,7 @@ class SymmetricInteroperabilityTest {
 
         byte[] plainText = "TU Clausthal Located in Clausthal Zellerfeld".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricEncryptionBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
+        SymmetricCipherBase64 symmetricEncryptionResult = SymmetricInteroperableBuilder
                 .createEncryptionBuilder(SymmetricInteroperabilityLanguages.Python)
                 .plaintext(plainText)
                 .encrypt();
@@ -98,12 +98,12 @@ class SymmetricInteroperabilityTest {
         byte[] plainText = "Hello World JCA WRAPPER Encrypt For Python".getBytes(StandardCharsets.UTF_8);
 
 
-        SymmetricEncryptionResult symmetricEncryptionResult = SymmetricEncryptionBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+        SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
+                .key(KeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 
-        System.out.println(symmetricEncryptionResult);
+        System.out.println(symmetricCipher);
 
     }
 
@@ -117,13 +117,13 @@ class SymmetricInteroperabilityTest {
         System.arraycopy(ciphertextBytes, 0, ciphertextTagBytes, 0, ciphertextBytes.length);
         System.arraycopy(tagBytes, 0, ciphertextTagBytes, ciphertextBytes.length, tagBytes.length);
 
-        SymmetricDecryptionResult symmetricDecryptionResult = SymmetricEncryptionBuilder.decryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
+        SymmetricPlain symmetricPlain = SymmetricBuilder.decryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
                 .key(new SecretKeySpec(Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()), getKeyAlgorithm(SymmetricAlgorithm.AES_GCM_128_NoPadding)))
                 .iv(Base64.getDecoder().decode("MXA8iL1gvl6i7Qx6".getBytes()))
                 .cipherText(ciphertextTagBytes)
                 .decrypt();
 
-        Assertions.assertEquals("Hello World", new String(symmetricDecryptionResult.plainText(), StandardCharsets.UTF_8));
+        Assertions.assertEquals("Hello World", new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
     }
 

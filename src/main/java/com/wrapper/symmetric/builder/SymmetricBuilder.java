@@ -2,9 +2,10 @@ package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricDecryptionResult;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import com.wrapper.symmetric.models.SymmetricPlain;
+import com.wrapper.symmetric.models.SymmetricCipher;
 import com.wrapper.symmetric.service.SymmetricImpl;
+import com.wrapper.symmetric.service.KeyGenerator;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import static com.wrapper.symmetric.utils.Utility.isGCM;
 import static java.util.Objects.requireNonNull;
 
 @Component
-public class SymmetricEncryptionBuilder {
+public class SymmetricBuilder {
 
     private SymmetricAlgorithm symmetricAlgorithm;
     private SecretKey key;
@@ -26,17 +27,17 @@ public class SymmetricEncryptionBuilder {
     private byte[] iv;
 
 
-    private static SymmetricEncryptionBuilder encryption;
+    private static SymmetricBuilder encryption;
 
     private SymmetricImpl symmetricImpl;
 
-    private SymmetricEncryptionBuilder() {
+    private SymmetricBuilder() {
         // private constructor to enforce the use of builder pattern
     }
 
     @Autowired
-    private SymmetricEncryptionBuilder(SymmetricImpl symmetricImpl) {
-        encryption = new SymmetricEncryptionBuilder();
+    private SymmetricBuilder(SymmetricImpl symmetricImpl) {
+        encryption = new SymmetricBuilder();
         this.symmetricImpl = symmetricImpl;
     }
 
@@ -70,40 +71,30 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static KeyBuilder encryption() {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new KeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
-    public static PlaintextBuilder encryptWithDefaultKeyGen() {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
-        return new PlaintextBuilder(encryption, SymmetricAlgorithm.DEFAULT);
-    }
-
     public static KeyBuilder encryption(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
-    public static PlaintextBuilder encryptWithDefaultKeyGen(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
-        return new PlaintextBuilder(encryption, symmetricAlgorithm);
-    }
-
     public static DecryptKeyBuilder decryption() {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new DecryptKeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
     public static DecryptKeyBuilder decryption(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricEncryptionBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl);
         return new DecryptKeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static class KeyBuilder {
 
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private KeyBuilder(SymmetricEncryptionBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+        private KeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
@@ -113,16 +104,21 @@ public class SymmetricEncryptionBuilder {
             encryption.key = key;
             return new PlaintextBuilder(encryption);
         }
+
+        public PlaintextBuilder generateKey() {
+            encryption.key = KeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm);
+            return new PlaintextBuilder(encryption);
+        }
     }
 
     public static class PlaintextBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private PlaintextBuilder(SymmetricEncryptionBuilder encryption) {
+        private PlaintextBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
-        private PlaintextBuilder(SymmetricEncryptionBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+        private PlaintextBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
@@ -147,9 +143,9 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class DecryptKeyBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private DecryptKeyBuilder(SymmetricEncryptionBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+        private DecryptKeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
@@ -162,9 +158,9 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class DecryptIVBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private DecryptIVBuilder(SymmetricEncryptionBuilder encryption) {
+        private DecryptIVBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -176,9 +172,9 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class CiphertextBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private CiphertextBuilder(SymmetricEncryptionBuilder encryption) {
+        private CiphertextBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
@@ -201,14 +197,14 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class EncryptionBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private EncryptionBuilder(SymmetricEncryptionBuilder encryption) {
+        private EncryptionBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
         @SneakyThrows
-        public SymmetricEncryptionResult encrypt() {
+        public SymmetricCipher encrypt() {
 
             try {
                 return encryption.symmetricImpl.encrypt(encryption);
@@ -225,14 +221,14 @@ public class SymmetricEncryptionBuilder {
     }
 
     public static class DecryptionBuilder {
-        private SymmetricEncryptionBuilder encryption;
+        private SymmetricBuilder encryption;
 
-        private DecryptionBuilder(SymmetricEncryptionBuilder encryption) {
+        private DecryptionBuilder(SymmetricBuilder encryption) {
             this.encryption = encryption;
         }
 
         @SneakyThrows
-        public SymmetricDecryptionResult decrypt() {
+        public SymmetricPlain decrypt() {
             if (encryption.associatedData != null && !isGCM(encryption.symmetricAlgorithm))
                 throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
 

@@ -1,11 +1,11 @@
 package com.wrapper.symmetric.service;
 
 import com.wrapper.exceptions.SafencryptException;
-import com.wrapper.symmetric.builder.SymmetricEncryptionBuilder;
+import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricDecryptionResult;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import com.wrapper.symmetric.models.SymmetricPlain;
+import com.wrapper.symmetric.models.SymmetricCipher;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -50,7 +50,7 @@ public class SymmetricImpl {
      * @return
      */
     @SneakyThrows
-    public SymmetricEncryptionResult encrypt(SymmetricEncryptionBuilder symmetricBuilder) {
+    public SymmetricCipher encrypt(SymmetricBuilder symmetricBuilder) {
 
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(symmetricBuilder.getSymmetricAlgorithm().getLabel());
 
@@ -58,7 +58,7 @@ public class SymmetricImpl {
         SecretKey secretKey = symmetricBuilder.getKey();
 
         if (!isKeyDefined(symmetricBuilder)) {
-            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+            secretKey = KeyGenerator.generateSymmetricKey(symmetricAlgorithm);
         }
 
         if (isGCM(symmetricAlgorithm)) {
@@ -75,7 +75,7 @@ public class SymmetricImpl {
      * @return
      */
     @SneakyThrows
-    public SymmetricDecryptionResult decrypt(SymmetricEncryptionBuilder symmetricBuilder) {
+    public SymmetricPlain decrypt(SymmetricBuilder symmetricBuilder) {
         SymmetricAlgorithm algorithm = symmetricBuilder.getSymmetricAlgorithm();
         return isGCM(algorithm) ?
                 decryptWithGCM(GCM_TAG_LENGTH, symmetricBuilder.getSymmetricAlgorithm(), symmetricBuilder.getKey(), symmetricBuilder.getIv(), symmetricBuilder.getCipherText(), symmetricBuilder.getAssociatedData()) :
@@ -85,7 +85,7 @@ public class SymmetricImpl {
 
 
     @SneakyThrows
-    protected SymmetricEncryptionResult encrypt(int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
+    protected SymmetricCipher encrypt(int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
         log.warn("Usage of Algorithm [{}] is insecure in client-server architecture", getAlgorithmForCipher(symmetricAlgorithm));
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
@@ -110,13 +110,13 @@ public class SymmetricImpl {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
         final byte[] ciphertext = cipher.doFinal(plaintext);
-        return new SymmetricEncryptionResult(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
+        return new SymmetricCipher(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
 
     }
 
 
     @SneakyThrows
-    protected SymmetricEncryptionResult encryptWithGCM(int tagLength, int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) {
+    protected SymmetricCipher encryptWithGCM(int tagLength, int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext, byte[] associatedData) {
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
 
@@ -132,12 +132,12 @@ public class SymmetricImpl {
 
         final byte[] ciphertext = cipher.doFinal(plaintext);
 
-        return new SymmetricEncryptionResult(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
+        return new SymmetricCipher(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
     }
 
 
     @SneakyThrows
-    protected SymmetricDecryptionResult decrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText) {
+    protected SymmetricPlain decrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText) {
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
 
@@ -155,10 +155,10 @@ public class SymmetricImpl {
         }
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
         final byte[] plaintext = cipher.doFinal(cipherText);
-        return new SymmetricDecryptionResult(plaintext, symmetricAlgorithm);
+        return new SymmetricPlain(plaintext, symmetricAlgorithm);
     }
 
-    protected SymmetricDecryptionResult decryptWithGCM(int tagLength, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText, byte[] associatedData) throws Exception {
+    protected SymmetricPlain decryptWithGCM(int tagLength, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText, byte[] associatedData) throws Exception {
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
 
@@ -171,7 +171,7 @@ public class SymmetricImpl {
         } catch (AEADBadTagException e) {
             throw new SafencryptException("Tag Mismatch: The Associated Data/IV used for encryption is different", e);
         }
-        return new SymmetricDecryptionResult(plaintext, symmetricAlgorithm);
+        return new SymmetricPlain(plaintext, symmetricAlgorithm);
     }
 
 

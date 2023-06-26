@@ -4,9 +4,9 @@ import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricDecryptionResult;
-import com.wrapper.symmetric.models.SymmetricEncryptionBase64;
-import com.wrapper.symmetric.models.SymmetricEncryptionResult;
+import com.wrapper.symmetric.models.SymmetricPlain;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricCipher;
 import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -36,7 +36,7 @@ public class SymmetricInteroperable {
     }
 
     @SneakyThrows
-    public SymmetricEncryptionBase64 interoperableEncrypt(SymmetricInteroperableBuilder symmetricBuilder) {
+    public SymmetricCipherBase64 interoperableEncrypt(SymmetricInteroperableBuilder symmetricBuilder) {
 
         Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
 
@@ -45,24 +45,24 @@ public class SymmetricInteroperable {
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
 
-        SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+        SecretKey secretKey = KeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
-        SymmetricEncryptionResult symmetricEncryptionResult;
+        SymmetricCipher symmetricCipher;
 
         if (isGCM(symmetricAlgorithm)) {
-            symmetricEncryptionResult = symmetric.encryptWithGCM(languageDetails.symmetric().tagLength(), languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
+            symmetricCipher = symmetric.encryptWithGCM(languageDetails.symmetric().tagLength(), languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText(), symmetricBuilder.getAssociatedData());
         } else {
-            symmetricEncryptionResult = symmetric.encrypt(languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText());
+            symmetricCipher = symmetric.encrypt(languageDetails.symmetric().ivBytes(), symmetricAlgorithm, secretKey, symmetricBuilder.getPlainText());
         }
 
         String alias = "alias_" + System.currentTimeMillis();
         symmetricKeyStore.saveKey(alias, secretKey);
-        return Utility.getSymmetricEncodedResult(symmetricEncryptionResult, alias);
+        return Utility.getSymmetricEncodedResult(symmetricCipher, alias);
 
     }
 
     @SneakyThrows
-    public SymmetricDecryptionResult interoperableDecrypt(SymmetricInteroperableBuilder symmetricBuilder) {
+    public SymmetricPlain interoperableDecrypt(SymmetricInteroperableBuilder symmetricBuilder) {
 
         Objects.nonNull(symmetricBuilder.getSymmetricInteroperabilityLanguages());
 
