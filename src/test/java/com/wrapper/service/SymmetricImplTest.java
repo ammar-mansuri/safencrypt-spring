@@ -167,8 +167,6 @@ class SymmetricImplTest {
                         .encrypt()
         );
         System.err.println(exception.getMessage());
-
-
     }
 
 
@@ -259,7 +257,7 @@ class SymmetricImplTest {
                         .cipherText(Base64.getDecoder().decode("Sj1D4fTUrXVUOH51HaCH/YmTqiuun2R+B9BUXLdxRXd/+OWb8e6LriH3aIYhmVLf"))
                         .decrypt());
 
-        System.err.println(exception);
+        System.err.println(exception.getMessage());
     }
 
 }

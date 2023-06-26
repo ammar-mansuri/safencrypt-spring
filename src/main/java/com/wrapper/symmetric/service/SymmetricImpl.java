@@ -2,6 +2,7 @@ package com.wrapper.symmetric.service;
 
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.builder.SymmetricBuilder;
+import com.wrapper.symmetric.config.ErrorConfig;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricPlain;
@@ -20,7 +21,6 @@ import javax.crypto.spec.IvParameterSpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
-import java.text.MessageFormat;
 import java.util.HashSet;
 
 import static com.wrapper.symmetric.utils.Utility.*;
@@ -33,13 +33,12 @@ public class SymmetricImpl {
     private static final int GCM_IV_SIZE = 12;
     private static final int REST_IV_SIZE = 16;
     private final SymmetricConfig symmetricConfig;
-
-    private final SymmetricKeyStore symmetricKeyStore;
+    private final ErrorConfig errorConfig;
 
     @Autowired
-    public SymmetricImpl(SymmetricConfig symmetricConfig, SymmetricKeyStore symmetricKeyStore) {
+    public SymmetricImpl(SymmetricConfig symmetricConfig, ErrorConfig errorConfig) {
         this.symmetricConfig = symmetricConfig;
-        this.symmetricKeyStore = symmetricKeyStore;
+        this.errorConfig = errorConfig;
     }
 
 
@@ -99,8 +98,8 @@ public class SymmetricImpl {
             try {
                 Security.addProvider(new BouncyCastleProvider());
                 cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm), "BC");
-            } catch (NoSuchProviderException ex) {
-                throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", symmetricAlgorithm.getLabel()));
+            } catch (Exception ex) {
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()), ex);
             }
         }
 
@@ -150,7 +149,7 @@ public class SymmetricImpl {
                 Security.addProvider(new BouncyCastleProvider());
                 cipher = Cipher.getInstance(algorithm, "BC");
             } catch (NoSuchProviderException ex) {
-                throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is currently not supported", symmetricAlgorithm.getLabel()));
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
             }
         }
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
@@ -169,17 +168,17 @@ public class SymmetricImpl {
         try {
             plaintext = cipher.doFinal(cipherText);
         } catch (AEADBadTagException e) {
-            throw new SafencryptException("Tag Mismatch: The Associated Data/IV used for encryption is different", e);
+            throw new SafencryptException(errorConfig.message("SAF-002", e));
         }
         return new SymmetricPlain(plaintext, symmetricAlgorithm);
     }
 
-
     @SneakyThrows
     protected void isAlgorithmSecure(String symmetricAlgorithm) {
-        if (!symmetricConfig.algorithms().contains(symmetricAlgorithm)) {
-            throw new SafencryptException(MessageFormat.format("Selected Algorithm [{0}] is not SET as SECURE in defined configuration", symmetricAlgorithm));
-        }
+        if (symmetricConfig.algorithms().contains(symmetricAlgorithm))
+            return;
+
+        throw new SafencryptException(errorConfig.message("SAF-001", symmetricAlgorithm));
     }
 
     @SneakyThrows
@@ -193,9 +192,8 @@ public class SymmetricImpl {
         }};
 
         if (!allowedKeyLength.contains(keyLength)) {
-            throw new SafencryptException(MessageFormat.format("Provided Key With Length [{0}] bits is not compatible with selected algorithm [{1}] ", keyLength, symmetricAlgorithm.getLabel()));
+            throw new SafencryptException(errorConfig.message("SAF-003", String.valueOf(keyLength), symmetricAlgorithm.getLabel()));
         }
 
     }
-
 }

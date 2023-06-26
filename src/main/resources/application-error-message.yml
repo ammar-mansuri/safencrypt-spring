@@ -1,0 +1,6 @@
+safencrypt:
+  error:
+    SAF-001: "Selected Algorithm [{0}] is not SET as SECURE in defined configuration"
+    SAF-002: "Tag Mismatch: The Associated Data/IV used for encryption is different"
+    SAF-003: "Provided Key With Length [{0}] bits is not compatible with selected algorithm [{1}]"
+    SAF-004: "Selected Algorithm [{0}] is currently not supported"

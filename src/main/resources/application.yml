@@ -41,7 +41,7 @@ crypto-config:
 
 
 
-spring.profiles.include: 'keystore'
+spring.profiles.include: 'keystore,error-message'
 
 logging:
   level:
