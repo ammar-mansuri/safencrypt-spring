@@ -5,8 +5,8 @@ import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.config.ErrorConfig;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -191,7 +191,7 @@ public class SymmetricImpl {
             add(256);
         }};
 
-        if (!allowedKeyLength.contains(keyLength)) {
+        if (!allowedKeyLength.contains(keyLength) || keyLength != getKeySize(symmetricAlgorithm)) {
             throw new SafencryptException(errorConfig.message("SAF-003", String.valueOf(keyLength), symmetricAlgorithm.getLabel()));
         }
 

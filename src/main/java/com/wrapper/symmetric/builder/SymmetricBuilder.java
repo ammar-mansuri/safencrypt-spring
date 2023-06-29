@@ -2,10 +2,10 @@ package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.models.SymmetricCipher;
-import com.wrapper.symmetric.service.SymmetricImpl;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.service.KeyGenerator;
+import com.wrapper.symmetric.service.SymmetricImpl;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +104,7 @@ public class SymmetricBuilder {
             encryption.key = key;
             return new PlaintextBuilder(encryption);
         }
+
 
         public PlaintextBuilder generateKey() {
             encryption.key = KeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm);
