@@ -4,8 +4,8 @@ import com.wrapper.Application;
 import com.wrapper.exceptions.SafencryptException;
 import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.service.KeyGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,10 +26,12 @@ class SymmetricImplTest {
     @Test
     void testSymmetricEncryptionUsingAllDefaults() {
 
+        byte[] plainText = "Hello World".getBytes(StandardCharsets.UTF_8);
+
         SymmetricCipher symmetricCipher = SymmetricBuilder
                 .encryption()
                 .generateKey()
-                .plaintext("Hello World".getBytes(StandardCharsets.UTF_8))
+                .plaintext(plainText)
                 .encrypt();
 
         SymmetricPlain symmetricPlain = SymmetricBuilder.decryption()
@@ -38,7 +40,7 @@ class SymmetricImplTest {
                 .cipherText(symmetricCipher.ciphertext())
                 .decrypt();
 
-        Assertions.assertEquals("Hello World", new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
     }
 
@@ -46,10 +48,11 @@ class SymmetricImplTest {
     @Test
     void testSymmetricEncryptionUsingDefaultAlgorithm() {
 
+        byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
 
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption()
-                .key(KeyGenerator.generateSymmetricKey())
-                .plaintext("Hello World 121@#".getBytes(StandardCharsets.UTF_8))
+                .key(KeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_GCM_128_NoPadding))
+                .plaintext(plainText)
                 .encrypt();
 
 
@@ -60,18 +63,19 @@ class SymmetricImplTest {
                 .decrypt();
 
 
-        Assertions.assertEquals("Hello World 121@#", new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
     }
 
     @Test
     void testSymmetricEncryptionUsingDefaultKey() {
 
+        byte[] plainText = "1232F #$$^%$^ Hello World".getBytes(StandardCharsets.UTF_8);
 
         SymmetricCipher symmetricCipher =
                 SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
                         .generateKey()
-                        .plaintext("1232F #$$^%$^ Hello World".getBytes(StandardCharsets.UTF_8))
+                        .plaintext(plainText)
                         .encrypt();
 
         SymmetricPlain symmetricPlain = SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
@@ -81,7 +85,7 @@ class SymmetricImplTest {
                 .decrypt();
 
 
-        Assertions.assertEquals("1232F #$$^%$^ Hello World", new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
     }
 
@@ -92,10 +96,11 @@ class SymmetricImplTest {
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
 
-        SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
-                .key(KeyGenerator.generateSymmetricKey(symmetricAlgorithm))
-                .plaintext(plainText)
-                .encrypt();
+        SymmetricCipher symmetricCipher =
+                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
+                        .key(KeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                        .plaintext(plainText)
+                        .encrypt();
 
         SymmetricPlain symmetricPlain = SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
                 .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
