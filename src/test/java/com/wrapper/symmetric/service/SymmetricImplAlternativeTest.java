@@ -120,7 +120,7 @@ public class SymmetricImplAlternativeTest {
 
         SafencryptException exception = Assertions.assertThrows(SafencryptException.class, () ->
                 SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_256_PKCS5Padding)
-                        .key(randomKey)
+                        .loadKey(randomKey)
                         .plaintext("Testing Incorrect Key Length".getBytes())
                         .encrypt());
 
@@ -183,7 +183,7 @@ public class SymmetricImplAlternativeTest {
 
 
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText, associatedData)
                 .encrypt();
 
@@ -208,7 +208,7 @@ public class SymmetricImplAlternativeTest {
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 
@@ -247,7 +247,7 @@ public class SymmetricImplAlternativeTest {
         byte[] associatedDataModified = "First test using AEADDD".getBytes(StandardCharsets.UTF_8);
 
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText, associatedData)
                 .encrypt();
 
@@ -265,7 +265,7 @@ public class SymmetricImplAlternativeTest {
         //GCM with Incorrect Padding
         SafencryptException exception = Assertions.assertThrows(SafencryptException.class, () ->
                 SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_PKCS5Padding)
-                        .key(SymmetricKeyGenerator.generateSymmetricKey())
+                        .loadKey(SymmetricKeyGenerator.generateSymmetricKey())
                         .plaintext("Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8))
                         .encrypt());
         System.err.println(exception.getMessage());
@@ -280,7 +280,7 @@ public class SymmetricImplAlternativeTest {
 
         SafencryptException exception = Assertions.assertThrows(SafencryptException.class, () ->
                 SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
-                        .key(emptyBytes)
+                        .loadKey(emptyBytes)
                         .plaintext(plainText)
                         .encrypt());
         System.err.println(exception.getMessage());

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 
 
 @SpringBootTest(classes = {Application.class})
@@ -39,13 +40,13 @@ class SymmetricImplFunctionalTest {
 
 
     @Test
-    void testSymmetricEncryptionUsingDefaultAlgorithm2() {
+    void testSymmetricEncryptionUsingDefaultAlgorithm() {
 
         byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
 
         SymmetricCipher symmetricCipher =
                 SymmetricBuilder.encryption()
-                        .key(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_GCM_128_NoPadding))
+                        .generateKey()
                         .plaintext(plainText)
                         .encrypt();
 
@@ -58,6 +59,51 @@ class SymmetricImplFunctionalTest {
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
+    }
+
+    @Test
+    void testSymmetricEncryptionUsingKeyLoading2() {
+
+        byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
+        byte[] key = new byte[16];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(key);
+
+        SymmetricCipher symmetricCipher =
+                SymmetricBuilder.encryption()
+                        .loadKey(key)
+                        .plaintext(plainText)
+                        .encrypt();
+
+        SymmetricPlain symmetricPlain =
+                SymmetricBuilder.decryption()
+                        .key(symmetricCipher.key())
+                        .iv(symmetricCipher.iv())
+                        .cipherText(symmetricCipher.ciphertext())
+                        .decrypt();
+
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void testSymmetricEncryptionUsingKeyLoading2_2() {
+
+        byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
+        byte[] key = SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_NoPadding);
+
+        SymmetricCipher symmetricCipher =
+                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_NoPadding)
+                        .loadKey(key)
+                        .plaintext(plainText)
+                        .encrypt();
+
+        SymmetricPlain symmetricPlain =
+                SymmetricBuilder.decryption()
+                        .key(symmetricCipher.key())
+                        .iv(symmetricCipher.iv())
+                        .cipherText(symmetricCipher.ciphertext())
+                        .decrypt();
+        Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
     }
 
     @Test
@@ -88,11 +134,10 @@ class SymmetricImplFunctionalTest {
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_192_NoPadding;
-        byte[] secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
         SymmetricCipher symmetricCipher =
                 SymmetricBuilder.encryption(symmetricAlgorithm)
-                        .key(secretKey)
+                        .generateKey()
                         .plaintext(plainText)
                         .encrypt();
 
@@ -141,7 +186,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricCipher symmetricCipher =
                 SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
-                        .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                        .generateKey()
                         .plaintext(plainText, associatedData)
                         .encrypt();
 
@@ -154,7 +199,6 @@ class SymmetricImplFunctionalTest {
 
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
-
     }
 
     @Test

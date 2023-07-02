@@ -17,7 +17,7 @@ class SymmetricBuilderTest {
     @Test
     void testBuilderAES_GCM() {
         SymmetricBuilder.encryption()
-                .key(SymmetricKeyGenerator.generateSymmetricKey())
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey())
                 .plaintext("sda".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
@@ -25,7 +25,7 @@ class SymmetricBuilderTest {
     @Test
     void testBuilderAES_GCMWithAssociatedData() {
         SymmetricBuilder.encryption(SymmetricAlgorithm.DEFAULT)
-                .key(SymmetricKeyGenerator.generateSymmetricKey())
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey())
                 .plaintext("ds".getBytes(StandardCharsets.UTF_8), "ads".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
@@ -33,7 +33,7 @@ class SymmetricBuilderTest {
     @Test
     void testBuilderAES_CBC() {
         SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
                 .plaintext("ds".getBytes(StandardCharsets.UTF_8))
                 .encrypt();
     }
@@ -43,7 +43,7 @@ class SymmetricBuilderTest {
 
         Assertions.assertThrows(Exception.class, () -> {
             SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_192_PKCS5Padding)
-                    .key(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
+                    .loadKey(SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding))
                     .plaintext("asd".getBytes(StandardCharsets.UTF_8), "ads".getBytes(StandardCharsets.UTF_8))
                     .encrypt();
         });

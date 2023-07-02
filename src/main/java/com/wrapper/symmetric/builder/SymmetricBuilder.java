@@ -79,14 +79,14 @@ public class SymmetricBuilder {
         return iv;
     }
 
-    public static KeyBuilder encryption() {
+    public static EncryptionKeyBuilder encryption() {
         encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
-        return new KeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
+        return new EncryptionKeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
-    public static KeyBuilder encryption(SymmetricAlgorithm symmetricAlgorithm) {
+    public static EncryptionKeyBuilder encryption(SymmetricAlgorithm symmetricAlgorithm) {
         encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
-        return new KeyBuilder(encryption, symmetricAlgorithm);
+        return new EncryptionKeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static DecryptKeyBuilder decryption() {
@@ -99,16 +99,16 @@ public class SymmetricBuilder {
         return new DecryptKeyBuilder(encryption, symmetricAlgorithm);
     }
 
-    public static class KeyBuilder {
+    public static class EncryptionKeyBuilder {
 
         private SymmetricBuilder encryption;
 
-        private KeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
+        private EncryptionKeyBuilder(SymmetricBuilder encryption, SymmetricAlgorithm symmetricAlgorithm) {
             this.encryption = encryption;
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
-        
-        public PlaintextBuilder key(byte[] key) {
+
+        public PlaintextBuilder loadKey(byte[] key) {
             requireNonNull(key);
             encryption.key = new SecretKeySpec(key, "AES");
             return new PlaintextBuilder(encryption);

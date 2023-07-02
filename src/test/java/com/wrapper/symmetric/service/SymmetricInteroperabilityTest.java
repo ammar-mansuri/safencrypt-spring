@@ -95,7 +95,7 @@ class SymmetricInteroperabilityTest {
 
 
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
-                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                .loadKey(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 
