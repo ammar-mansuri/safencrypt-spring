@@ -1,6 +1,7 @@
 package com.wrapper.symmetric.service;
 
 import com.wrapper.exceptions.SafencryptException;
+import com.wrapper.symmetric.config.ErrorConfig;
 import com.wrapper.symmetric.config.KeyStoreConfig;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,11 @@ public class SymmetricKeyStore {
     private static String KEY_STORE_FORMAT = "JCEKS";
     private final KeyStoreConfig keyStoreConfig;
 
-    public SymmetricKeyStore(KeyStoreConfig keyStoreConfig) {
+    private final ErrorConfig errorConfig;
+
+    public SymmetricKeyStore(KeyStoreConfig keyStoreConfig, ErrorConfig errorConfig) {
         this.keyStoreConfig = keyStoreConfig;
+        this.errorConfig = errorConfig;
     }
 
     @SneakyThrows
@@ -61,7 +65,7 @@ public class SymmetricKeyStore {
 
             return secretKey;
         } catch (Exception e) {
-            throw new SafencryptException("Unable to load desired key from the keystore");
+            throw new SafencryptException(errorConfig.message("SAF-006", e, alias));
         }
 
     }

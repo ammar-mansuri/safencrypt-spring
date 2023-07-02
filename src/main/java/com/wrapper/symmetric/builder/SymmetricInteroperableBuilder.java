@@ -1,11 +1,12 @@
 package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
+import com.wrapper.symmetric.config.ErrorConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
-import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.service.SymmetricImpl;
 import com.wrapper.symmetric.service.SymmetricInteroperable;
 import jakarta.annotation.PostConstruct;
@@ -35,16 +36,19 @@ public class SymmetricInteroperableBuilder {
 
     private SymmetricInteroperabilityConfig symmetricInteroperabilityConfig;
 
+    private ErrorConfig errorConfig;
+
     private SymmetricInteroperableBuilder() {
         // private constructor to enforce the use of builder pattern
     }
 
     @Autowired
-    private SymmetricInteroperableBuilder(SymmetricImpl symmetricImpl, SymmetricInteroperable symmetricInteroperable, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig) {
+    private SymmetricInteroperableBuilder(SymmetricImpl symmetricImpl, SymmetricInteroperable symmetricInteroperable, SymmetricInteroperabilityConfig symmetricInteroperabilityConfig, ErrorConfig errorConfig) {
         encryption = new SymmetricInteroperableBuilder();
         this.symmetricImpl = symmetricImpl;
         this.symmetricInteroperable = symmetricInteroperable;
         this.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
+        this.errorConfig = errorConfig;
     }
 
     @PostConstruct
@@ -52,6 +56,7 @@ public class SymmetricInteroperableBuilder {
         encryption.symmetricImpl = symmetricImpl;
         encryption.symmetricInteroperable = symmetricInteroperable;
         encryption.symmetricInteroperabilityConfig = symmetricInteroperabilityConfig;
+        encryption.errorConfig = errorConfig;
     }
 
 
@@ -84,12 +89,12 @@ public class SymmetricInteroperableBuilder {
     }
 
     public static InteroperableEncryptionBuilder createEncryptionBuilder(SymmetricInteroperabilityLanguages symmetricInteroperabilityLanguages) {
-        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig);
+        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig, encryption.errorConfig);
         return new InteroperableEncryptionBuilder(encryption, symmetricInteroperabilityLanguages);
     }
 
     public static InteroperableDBuilder createDecryptionBuilder(SymmetricInteroperabilityLanguages symmetricInteroperabilityLanguages) {
-        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig);
+        encryption = new SymmetricInteroperableBuilder(encryption.symmetricImpl, encryption.symmetricInteroperable, encryption.symmetricInteroperabilityConfig, encryption.errorConfig);
         return new InteroperableDBuilder(encryption, symmetricInteroperabilityLanguages);
     }
 
@@ -121,7 +126,7 @@ public class SymmetricInteroperableBuilder {
 
 
             if (!encryption.symmetricInteroperabilityConfig.languageDetails(encryption.getSymmetricInteroperabilityLanguages().name()).symmetric().defaultAlgo().startsWith("AES_GCM")) {
-                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-005"));
             }
 
             encryption.associatedData = associatedData;
@@ -175,7 +180,7 @@ public class SymmetricInteroperableBuilder {
 
             SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(encryption.symmetricInteroperabilityConfig.languageDetails(encryption.getSymmetricInteroperabilityLanguages().name()).symmetric().defaultAlgo());
             if (symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
-                throw new SafencryptException("TAG is required in algorithm AES_GCM for decryption");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-007"));
             }
 
             encryption.cipherText = cipherText;
@@ -187,7 +192,7 @@ public class SymmetricInteroperableBuilder {
 
             SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(encryption.symmetricInteroperabilityConfig.languageDetails(encryption.getSymmetricInteroperabilityLanguages().name()).symmetric().defaultAlgo());
             if (!symmetricAlgorithm.getLabel().startsWith("AES_GCM")) {
-                throw new SafencryptException("TAG is not required in algorithm AES_GCM for decryption");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-008", symmetricAlgorithm.getLabel()));
             }
 
             encryption.cipherText = cipherText;
@@ -208,7 +213,7 @@ public class SymmetricInteroperableBuilder {
         public InteroperableDecryptionBuilder optionalAssociatedData(byte[] associatedData) {
 
             if (!encryption.symmetricInteroperabilityConfig.languageDetails(encryption.getSymmetricInteroperabilityLanguages().name()).symmetric().defaultAlgo().startsWith("AES_GCM")) {
-                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-005"));
             }
 
             encryption.associatedData = associatedData;

@@ -41,3 +41,4 @@ mvnw.cmd
 
 # Spring Boot
 .spring-boot-starter-*.jar
+/src/~$Common_Exceptions.xlsx

@@ -1,14 +1,13 @@
-package com.wrapper.service;
+package com.wrapper.symmetric.service;
 
 import com.wrapper.Application;
 import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.enums.SymmetricInteroperabilityLanguages;
-import com.wrapper.symmetric.models.SymmetricPlain;
-import com.wrapper.symmetric.models.SymmetricCipherBase64;
 import com.wrapper.symmetric.models.SymmetricCipher;
-import com.wrapper.symmetric.service.KeyGenerator;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -99,7 +98,7 @@ class SymmetricInteroperabilityTest {
 
 
         SymmetricCipher symmetricCipher = SymmetricBuilder.encryption(SymmetricAlgorithm.AES_GCM_256_NoPadding)
-                .key(KeyGenerator.generateSymmetricKey(symmetricAlgorithm))
+                .key(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm))
                 .plaintext(plainText)
                 .encrypt();
 

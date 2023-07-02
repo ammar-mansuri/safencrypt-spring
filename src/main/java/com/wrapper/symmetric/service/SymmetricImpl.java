@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.AEADBadTagException;
 import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
@@ -57,7 +58,7 @@ public class SymmetricImpl {
         SecretKey secretKey = symmetricBuilder.getKey();
 
         if (!isKeyDefined(symmetricBuilder)) {
-            secretKey = KeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
         }
 
         if (isGCM(symmetricAlgorithm)) {
@@ -85,32 +86,35 @@ public class SymmetricImpl {
 
     @SneakyThrows
     protected SymmetricCipher encrypt(int ivSize, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] plaintext) {
-        log.warn("Usage of Algorithm [{}] is insecure in client-server architecture", getAlgorithmForCipher(symmetricAlgorithm));
+        log.warn(errorConfig.message("SAF-011", getAlgorithmAndMode(symmetricAlgorithm)));
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
 
         Cipher cipher;
-
+        String algorithm = getAlgorithmForCipher(symmetricAlgorithm);
         try {
             cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm));
         } catch (NoSuchAlgorithmException e) {
-
             try {
                 Security.addProvider(new BouncyCastleProvider());
-                cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm), "BC");
+                cipher = Cipher.getInstance(algorithm, "BC");
+            } catch (NoSuchPaddingException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-012", ex, symmetricAlgorithm.getLabel()));
+            } catch (NoSuchAlgorithmException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+            } catch (NoSuchProviderException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
             } catch (Exception ex) {
-                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()), ex);
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
             }
         }
 
 
         final IvParameterSpec ivSpec = generateIv(ivSize);
-
+        isIvLengthCorrect(ivSpec.getIV(), ivSize, symmetricAlgorithm);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
-
         final byte[] ciphertext = cipher.doFinal(plaintext);
         return new SymmetricCipher(ivSpec.getIV(), secretKey.getEncoded(), ciphertext, SymmetricAlgorithm.fromLabel(symmetricAlgorithm.getLabel()));
-
     }
 
 
@@ -119,10 +123,17 @@ public class SymmetricImpl {
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
 
-        final Cipher cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm));
+        final Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+        } catch (Exception ex) {
+            throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+        }
 
         final IvParameterSpec ivSpec = generateIv(ivSize);
-
+        isIvLengthCorrect(ivSpec.getIV(), ivSize, symmetricAlgorithm);
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(tagLength, ivSpec.getIV()));
 
         if (associatedData != null && associatedData.length > 0) {
@@ -137,8 +148,10 @@ public class SymmetricImpl {
 
     @SneakyThrows
     protected SymmetricPlain decrypt(SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText) {
+        log.warn(errorConfig.message("SAF-011", getAlgorithmAndMode(symmetricAlgorithm)));
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
+        isIvLengthCorrect(iv, REST_IV_SIZE, symmetricAlgorithm);
 
         Cipher cipher;
         String algorithm = getAlgorithmForCipher(symmetricAlgorithm);
@@ -148,7 +161,13 @@ public class SymmetricImpl {
             try {
                 Security.addProvider(new BouncyCastleProvider());
                 cipher = Cipher.getInstance(algorithm, "BC");
+            } catch (NoSuchPaddingException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-012", ex, symmetricAlgorithm.getLabel()));
+            } catch (NoSuchAlgorithmException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
             } catch (NoSuchProviderException ex) {
+                throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+            } catch (Exception ex) {
                 throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
             }
         }
@@ -160,8 +179,17 @@ public class SymmetricImpl {
     protected SymmetricPlain decryptWithGCM(int tagLength, SymmetricAlgorithm symmetricAlgorithm, SecretKey secretKey, byte[] iv, byte[] cipherText, byte[] associatedData) throws Exception {
         isAlgorithmSecure(symmetricAlgorithm.getLabel());
         isKeyLengthCorrect(secretKey, symmetricAlgorithm);
+        isIvLengthCorrect(iv, GCM_IV_SIZE, symmetricAlgorithm);
 
-        final Cipher cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm));
+        final Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(getAlgorithmForCipher(symmetricAlgorithm));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+        } catch (Exception ex) {
+            throw new SafencryptException(errorConfig.message("SAF-004", ex, symmetricAlgorithm.getLabel()));
+        }
+
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(tagLength, iv));
         if (associatedData != null && associatedData.length > 0) cipher.updateAAD(associatedData);
         final byte[] plaintext;
@@ -192,8 +220,16 @@ public class SymmetricImpl {
         }};
 
         if (!allowedKeyLength.contains(keyLength) || keyLength != getKeySize(symmetricAlgorithm)) {
-            throw new SafencryptException(errorConfig.message("SAF-003", String.valueOf(keyLength), symmetricAlgorithm.getLabel()));
+            throw new SafencryptException(errorConfig.message("SAF-003", String.valueOf(secretKey.getEncoded().length), symmetricAlgorithm.getLabel(), String.valueOf(getKeySize(symmetricAlgorithm) / 8)));
         }
+    }
 
+
+    @SneakyThrows
+    protected void isIvLengthCorrect(byte[] iv, int IV_SIZE, SymmetricAlgorithm symmetricAlgorithm) {
+
+        if (iv.length != IV_SIZE) {
+            throw new SafencryptException(errorConfig.message("SAF-014", String.valueOf(iv.length), symmetricAlgorithm.getLabel(), String.valueOf(IV_SIZE)));
+        }
     }
 }

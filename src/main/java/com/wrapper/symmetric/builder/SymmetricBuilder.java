@@ -1,17 +1,21 @@
 package com.wrapper.symmetric.builder;
 
 import com.wrapper.exceptions.SafencryptException;
+import com.wrapper.symmetric.config.ErrorConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricCipher;
 import com.wrapper.symmetric.models.SymmetricPlain;
-import com.wrapper.symmetric.service.KeyGenerator;
 import com.wrapper.symmetric.service.SymmetricImpl;
+import com.wrapper.symmetric.service.SymmetricKeyGenerator;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
 
 import static com.wrapper.symmetric.utils.Utility.isGCM;
 import static java.util.Objects.requireNonNull;
@@ -31,19 +35,23 @@ public class SymmetricBuilder {
 
     private SymmetricImpl symmetricImpl;
 
+    private ErrorConfig errorConfig;
+
     private SymmetricBuilder() {
         // private constructor to enforce the use of builder pattern
     }
 
     @Autowired
-    private SymmetricBuilder(SymmetricImpl symmetricImpl) {
+    private SymmetricBuilder(SymmetricImpl symmetricImpl, ErrorConfig errorConfig) {
         encryption = new SymmetricBuilder();
         this.symmetricImpl = symmetricImpl;
+        this.errorConfig = errorConfig;
     }
 
     @PostConstruct
     public void init() {
         encryption.symmetricImpl = symmetricImpl;
+        encryption.errorConfig = errorConfig;
     }
 
     public SymmetricAlgorithm getSymmetricAlgorithm() {
@@ -71,22 +79,22 @@ public class SymmetricBuilder {
     }
 
     public static KeyBuilder encryption() {
-        encryption = new SymmetricBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
         return new KeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
     public static KeyBuilder encryption(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
         return new KeyBuilder(encryption, symmetricAlgorithm);
     }
 
     public static DecryptKeyBuilder decryption() {
-        encryption = new SymmetricBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
         return new DecryptKeyBuilder(encryption, SymmetricAlgorithm.DEFAULT);
     }
 
     public static DecryptKeyBuilder decryption(SymmetricAlgorithm symmetricAlgorithm) {
-        encryption = new SymmetricBuilder(encryption.symmetricImpl);
+        encryption = new SymmetricBuilder(encryption.symmetricImpl, encryption.errorConfig);
         return new DecryptKeyBuilder(encryption, symmetricAlgorithm);
     }
 
@@ -105,9 +113,16 @@ public class SymmetricBuilder {
             return new PlaintextBuilder(encryption);
         }
 
-
+        @SneakyThrows
         public PlaintextBuilder generateKey() {
-            encryption.key = KeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm);
+
+            try {
+                encryption.key = SymmetricKeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm);
+            } catch (Exception ex) {
+                if (ex instanceof NoSuchAlgorithmException)
+                    throw new SafencryptException(encryption.errorConfig.message("SAF-004", ex, encryption.symmetricAlgorithm.getLabel()));
+            }
+
             return new PlaintextBuilder(encryption);
         }
     }
@@ -135,7 +150,7 @@ public class SymmetricBuilder {
         @SneakyThrows
         public EncryptionBuilder plaintext(byte[] plaintext, byte[] associatedData) {
             if (!isGCM(encryption.symmetricAlgorithm))
-                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-005"));
             encryption.plainText = plaintext;
             encryption.associatedData = associatedData;
             return new EncryptionBuilder(encryption);
@@ -189,7 +204,7 @@ public class SymmetricBuilder {
         @SneakyThrows
         public DecryptionBuilder cipherText(byte[] cipherText, byte[] associatedData) {
             if (!isGCM(encryption.symmetricAlgorithm))
-                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
+                throw new SafencryptException(encryption.errorConfig.message("SAF-005"));
             encryption.cipherText = cipherText;
             encryption.associatedData = associatedData;
             return new DecryptionBuilder(encryption);
@@ -214,6 +229,16 @@ public class SymmetricBuilder {
                 if (e instanceof SafencryptException) {
                     throw e;
                 }
+
+                if (e instanceof BadPaddingException) {
+                    throw new SafencryptException(encryption.errorConfig.message("SAF-010", e));
+                }
+
+                if (e instanceof IllegalBlockSizeException) {
+
+                    throw new SafencryptException(encryption.errorConfig.message("SAF-009", e));
+                }
+
                 throw new SafencryptException(e.getMessage(), e);
 
             }
@@ -231,13 +256,23 @@ public class SymmetricBuilder {
         @SneakyThrows
         public SymmetricPlain decrypt() {
             if (encryption.associatedData != null && !isGCM(encryption.symmetricAlgorithm))
-                throw new SafencryptException("Associated Data can only be SET for algorithm AES_GCM");
-
+                throw new SafencryptException(encryption.errorConfig.message("SAF-005"));
             try {
                 return encryption.symmetricImpl.decrypt(encryption);
             } catch (Exception e) {
-                if (e instanceof SafencryptException)
+                if (e instanceof SafencryptException) {
                     throw e;
+                }
+
+                if (e instanceof BadPaddingException) {
+                    throw new SafencryptException(encryption.errorConfig.message("SAF-010", e));
+                }
+
+                if (e instanceof IllegalBlockSizeException) {
+
+                    throw new SafencryptException(encryption.errorConfig.message("SAF-013", e));
+                }
+
                 throw new SafencryptException(e.getMessage(), e);
             }
         }

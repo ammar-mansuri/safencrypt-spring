@@ -4,9 +4,9 @@ import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.config.SymmetricConfig;
 import com.wrapper.symmetric.config.SymmetricInteroperabilityConfig;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricPlain;
-import com.wrapper.symmetric.models.SymmetricCipherBase64;
 import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
+import com.wrapper.symmetric.models.SymmetricPlain;
 import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -45,7 +45,7 @@ public class SymmetricInteroperable {
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
 
-        SecretKey secretKey = KeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+        SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
         SymmetricCipher symmetricCipher;
 

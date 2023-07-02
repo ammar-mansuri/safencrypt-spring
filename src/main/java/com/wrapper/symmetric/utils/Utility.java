@@ -2,8 +2,8 @@ package com.wrapper.symmetric.utils;
 
 import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
-import com.wrapper.symmetric.models.SymmetricCipherBase64;
 import com.wrapper.symmetric.models.SymmetricCipher;
+import com.wrapper.symmetric.models.SymmetricCipherBase64;
 
 import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
@@ -22,6 +22,12 @@ public class Utility {
 
         final String[] algo = symmetricAlgorithm.getLabel().split("_");
         return algo[0] + "/" + algo[1] + "/" + algo[3];
+    }
+
+    public static String getAlgorithmAndMode(SymmetricAlgorithm symmetricAlgorithm) {
+
+        final String[] algo = symmetricAlgorithm.getLabel().split("_");
+        return algo[0] + "/" + algo[1];
     }
 
     public static String getModeOfOperation(SymmetricAlgorithm symmetricAlgorithm) {

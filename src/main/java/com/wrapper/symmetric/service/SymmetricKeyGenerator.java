@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 
 @Service
-public class KeyGenerator {
+public class SymmetricKeyGenerator {
 
     public static SecretKey generateSymmetricKey() {
         return generateSymmetricKey(SymmetricAlgorithm.DEFAULT);
