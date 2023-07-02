@@ -8,13 +8,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
-import static com.wrapper.symmetric.utils.Utility.getKeyAlgorithm;
-
 @SpringBootTest(classes = {Application.class})
-class SymmetricBuilderBuilderTest {
+class SymmetricBuilderTest {
 
 
     @Test
@@ -56,7 +53,7 @@ class SymmetricBuilderBuilderTest {
 
         Assertions.assertThrows(Exception.class, () -> {
             SymmetricBuilder.decryption()
-                    .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                    .key(symmetricCipher.key())
                     .iv(symmetricCipher.iv())
                     .cipherText(symmetricCipher.ciphertext(), "associatedData".getBytes(StandardCharsets.UTF_8))
                     .decrypt();
@@ -75,7 +72,7 @@ class SymmetricBuilderBuilderTest {
 
         SymmetricBuilder
                 .decryption()
-                .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                .key(symmetricCipher.key())
                 .iv(symmetricCipher.iv())
                 .cipherText(symmetricCipher.ciphertext())
                 .decrypt();

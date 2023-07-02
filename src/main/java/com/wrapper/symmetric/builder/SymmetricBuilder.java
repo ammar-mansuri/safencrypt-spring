@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 
 import static com.wrapper.symmetric.utils.Utility.isGCM;
@@ -106,10 +107,10 @@ public class SymmetricBuilder {
             this.encryption = encryption;
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
-
-        public PlaintextBuilder key(SecretKey key) {
+        
+        public PlaintextBuilder key(byte[] key) {
             requireNonNull(key);
-            encryption.key = key;
+            encryption.key = new SecretKeySpec(key, "AES");
             return new PlaintextBuilder(encryption);
         }
 
@@ -117,7 +118,7 @@ public class SymmetricBuilder {
         public PlaintextBuilder generateKey() {
 
             try {
-                encryption.key = SymmetricKeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm);
+                encryption.key = new SecretKeySpec(SymmetricKeyGenerator.generateSymmetricKey(encryption.symmetricAlgorithm), "AES");
             } catch (Exception ex) {
                 if (ex instanceof NoSuchAlgorithmException)
                     throw new SafencryptException(encryption.errorConfig.message("SAF-004", ex, encryption.symmetricAlgorithm.getLabel()));
@@ -166,9 +167,9 @@ public class SymmetricBuilder {
             this.encryption.symmetricAlgorithm = symmetricAlgorithm;
         }
 
-        public DecryptIVBuilder key(SecretKey key) {
+        public DecryptIVBuilder key(byte[] key) {
             requireNonNull(key);
-            encryption.key = key;
+            encryption.key = new SecretKeySpec(key, "AES");
             return new DecryptIVBuilder(encryption);
         }
     }

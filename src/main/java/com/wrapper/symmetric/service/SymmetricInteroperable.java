@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.Objects;
 
 import static com.wrapper.symmetric.utils.Base64Decoder.decodeBase64;
@@ -45,8 +46,8 @@ public class SymmetricInteroperable {
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.fromLabel(languageDetails.symmetric().defaultAlgo());
 
 
-        SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
-
+        SecretKey secretKey = new SecretKeySpec(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm), "AES");
+        
         SymmetricCipher symmetricCipher;
 
         if (isGCM(symmetricAlgorithm)) {

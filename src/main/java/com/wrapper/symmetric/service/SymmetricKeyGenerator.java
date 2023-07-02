@@ -5,22 +5,20 @@ import com.wrapper.symmetric.utils.Utility;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
+import javax.crypto.KeyGenerator;
 
 @Service
 public class SymmetricKeyGenerator {
 
-    public static SecretKey generateSymmetricKey() {
+    public static byte[] generateSymmetricKey() {
         return generateSymmetricKey(SymmetricAlgorithm.DEFAULT);
     }
 
     @SneakyThrows
-    public static SecretKey generateSymmetricKey(SymmetricAlgorithm symmetricAlgorithm) {
+    public static byte[] generateSymmetricKey(SymmetricAlgorithm symmetricAlgorithm) {
 
-        javax.crypto.KeyGenerator kg = javax.crypto.KeyGenerator.getInstance(Utility.getKeyAlgorithm(symmetricAlgorithm));
+        KeyGenerator kg = KeyGenerator.getInstance(Utility.getKeyAlgorithm(symmetricAlgorithm));
         kg.init(Utility.getKeySize(symmetricAlgorithm));
-        return kg.generateKey();
+        return kg.generateKey().getEncoded();
     }
-
-
 }

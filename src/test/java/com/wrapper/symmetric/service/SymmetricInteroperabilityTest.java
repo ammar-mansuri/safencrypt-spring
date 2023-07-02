@@ -12,11 +12,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-
-import static com.wrapper.symmetric.utils.Utility.getKeyAlgorithm;
 
 @SpringBootTest(classes = {Application.class})
 class SymmetricInteroperabilityTest {
@@ -117,7 +114,7 @@ class SymmetricInteroperabilityTest {
         System.arraycopy(tagBytes, 0, ciphertextTagBytes, ciphertextBytes.length, tagBytes.length);
 
         SymmetricPlain symmetricPlain = SymmetricBuilder.decryption(SymmetricAlgorithm.AES_GCM_128_NoPadding)
-                .key(new SecretKeySpec(Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()), getKeyAlgorithm(SymmetricAlgorithm.AES_GCM_128_NoPadding)))
+                .key(Base64.getDecoder().decode("2Gn4xCkAioEBk21QY9BWCw==".getBytes()))
                 .iv(Base64.getDecoder().decode("MXA8iL1gvl6i7Qx6".getBytes()))
                 .cipherText(ciphertextTagBytes)
                 .decrypt();

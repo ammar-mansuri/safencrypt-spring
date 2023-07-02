@@ -19,6 +19,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
@@ -58,7 +59,7 @@ public class SymmetricImpl {
         SecretKey secretKey = symmetricBuilder.getKey();
 
         if (!isKeyDefined(symmetricBuilder)) {
-            secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+            secretKey = new SecretKeySpec(SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm), "AES");
         }
 
         if (isGCM(symmetricAlgorithm)) {

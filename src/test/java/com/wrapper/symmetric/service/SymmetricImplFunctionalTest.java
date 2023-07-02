@@ -9,11 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-
-import static com.wrapper.symmetric.utils.Utility.getKeyAlgorithm;
 
 
 @SpringBootTest(classes = {Application.class})
@@ -32,7 +28,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption()
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
@@ -53,14 +49,12 @@ class SymmetricImplFunctionalTest {
                         .plaintext(plainText)
                         .encrypt();
 
-
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption()
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
-
 
         Assertions.assertEquals(new String(plainText, StandardCharsets.UTF_8), new String(symmetricPlain.plainText(), StandardCharsets.UTF_8));
 
@@ -79,7 +73,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
@@ -94,7 +88,7 @@ class SymmetricImplFunctionalTest {
 
         byte[] plainText = "Hello World JCA WRAPPER".getBytes(StandardCharsets.UTF_8);
         SymmetricAlgorithm symmetricAlgorithm = SymmetricAlgorithm.AES_GCM_192_NoPadding;
-        SecretKey secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
+        byte[] secretKey = SymmetricKeyGenerator.generateSymmetricKey(symmetricAlgorithm);
 
         SymmetricCipher symmetricCipher =
                 SymmetricBuilder.encryption(symmetricAlgorithm)
@@ -104,7 +98,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
@@ -127,7 +121,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
@@ -153,7 +147,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption(symmetricCipher.symmetricAlgorithm())
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext(), associatedData)
                         .decrypt();
@@ -176,7 +170,7 @@ class SymmetricImplFunctionalTest {
 
         SymmetricPlain symmetricPlain =
                 SymmetricBuilder.decryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
-                        .key(new SecretKeySpec(symmetricCipher.key(), getKeyAlgorithm(symmetricCipher.symmetricAlgorithm())))
+                        .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
                         .decrypt();
