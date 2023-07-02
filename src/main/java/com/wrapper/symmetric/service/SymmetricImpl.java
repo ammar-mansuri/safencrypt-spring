@@ -23,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import static com.wrapper.symmetric.utils.Utility.*;
@@ -219,6 +220,11 @@ public class SymmetricImpl {
             add(192);
             add(256);
         }};
+
+
+        if (Arrays.equals(secretKey.getEncoded(), new byte[secretKey.getEncoded().length])) {
+            throw new SafencryptException(errorConfig.message("SAF-015"));
+        }
 
         if (!allowedKeyLength.contains(keyLength) || keyLength != getKeySize(symmetricAlgorithm)) {
             throw new SafencryptException(errorConfig.message("SAF-003", String.valueOf(secretKey.getEncoded().length), symmetricAlgorithm.getLabel(), String.valueOf(getKeySize(symmetricAlgorithm) / 8)));

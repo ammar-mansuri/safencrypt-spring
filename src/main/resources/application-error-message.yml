@@ -14,3 +14,4 @@ safencrypt:
     SAF-012: "Padding in Selected Algorithm [{0}] is incorrect"
     SAF-013: "Provided Ciphertext is should be Padded or must be at-least 16 bytes or its multiple (16,32,48,...)"
     SAF-014: "Provided IV With Length [{0}] bytes is not compatible with selected algorithm [{1}], it should be of [{2}] bytes"
+    SAF-015: "Unsecure Key! Key is initialized with all zeros"

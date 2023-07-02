@@ -270,4 +270,21 @@ public class SymmetricImplAlternativeTest {
                         .encrypt());
         System.err.println(exception.getMessage());
     }
+
+    @Test
+    void testSymmetricEncryptionWithEmptyKey() {
+
+
+        byte[] plainText = "TESTING CBC 128 With  Empty Key".getBytes(StandardCharsets.UTF_8);
+        byte[] emptyBytes = new byte[16];
+
+        SafencryptException exception = Assertions.assertThrows(SafencryptException.class, () ->
+                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
+                        .key(emptyBytes)
+                        .plaintext(plainText)
+                        .encrypt());
+        System.err.println(exception.getMessage());
+
+
+    }
 }
