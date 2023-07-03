@@ -89,16 +89,16 @@ class SymmetricImplFunctionalTest {
     void testSymmetricEncryptionUsingKeyLoading2_2() {
 
         byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
-        byte[] key = SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_NoPadding);
+        byte[] key = SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding);
 
         SymmetricCipher symmetricCipher =
-                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_NoPadding)
+                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
                         .loadKey(key)
                         .plaintext(plainText)
                         .encrypt();
 
         SymmetricPlain symmetricPlain =
-                SymmetricBuilder.decryption()
+                SymmetricBuilder.decryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
                         .key(symmetricCipher.key())
                         .iv(symmetricCipher.iv())
                         .cipherText(symmetricCipher.ciphertext())
