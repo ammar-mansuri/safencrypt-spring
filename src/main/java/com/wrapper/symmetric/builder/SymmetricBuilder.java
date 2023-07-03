@@ -38,12 +38,12 @@ public class SymmetricBuilder {
 
     private ErrorConfig errorConfig;
 
-    private SymmetricBuilder() {
+    public SymmetricBuilder() {
         // private constructor to enforce the use of builder pattern
     }
 
     @Autowired
-    private SymmetricBuilder(SymmetricImpl symmetricImpl, ErrorConfig errorConfig) {
+    public SymmetricBuilder(SymmetricImpl symmetricImpl, ErrorConfig errorConfig) {
         encryption = new SymmetricBuilder();
         this.symmetricImpl = symmetricImpl;
         this.errorConfig = errorConfig;

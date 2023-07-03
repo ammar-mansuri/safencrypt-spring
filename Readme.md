@@ -36,9 +36,27 @@ Install dependencies
 
 2. The library uses safe defaults for the creation of Initialization Vector (IV) during encryption, which is returned back to the user for further usage (decryption).
 
-3. The default Algorithm of the library, unless specified by the user, is AES_GCM_128_NoPadding. [Where 128 specifies the key length]
+3. The default Algorithm of the library, unless specified by the user, is "AES_GCM_128_NoPadding". If you dont specify the algorithm in parameter of the encryption/decryption builder, it will automatically pick the DEFAULT one. 
+
+```java
+    SymmetricBuilder.encryption()
+```
+
+```java
+    SymmetricBuilder.decryption()
+```
 
 4. Enum class SymmetricAlgorithm contains a list of the algorithms that are supported currently by the library, provided that they are set as SECURE in the configuration file. 
+
+5. When you dont want to use the DEFAULT algorithm for encryption/decryption purposes, please make sure to specify the correct ALGORITHM from the SymmetricAlgorithm class while creating the builder.
+
+```java
+    SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
+```
+
+```java
+    SymmetricBuilder.decryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
+```
 
 5. Only the Algorithms in SymmetricAlgorithm class are currently supported. The algorithms in SymmetricAlgorithm class must also be declared as secure in the applications.yml file when extending the library. 
 ## IMPORTANT: Encoding/Decoding
@@ -49,19 +67,19 @@ In order to make sure you have seamless experience while encryption and decrypti
 1. When providing an input to the builder for Encryption, make sure to ENCODE it using the correct encoding format. 
 
 ```java
-        byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
+    byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
 ```
 
 OR (As the default encoding in java is UTF-8)
 
 ```java
-        byte[] plainText = "Hello World 121@#".getBytes();
+    byte[] plainText = "Hello World 121@#".getBytes();
 ```
 
 2. When you get the plainText bytes[] back after the Decryption process, simlary it should be DECODED to get back the correct plain text. 
 
 ```java
-        new String(plainTextBytes[] , StandardCharsets.UTF_8);
+    new String(plainTextBytes[] , StandardCharsets.UTF_8);
 ```
 ## Usage Examples [Symmetric Key Generation]
 
@@ -125,10 +143,10 @@ Example2: Generating the key from the library, and loading any key using the loa
 
 ```java
         byte[] plainText = "Hello World 121@#".getBytes(StandardCharsets.UTF_8);
-        byte[] key = SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_NoPadding);
+        byte[] key = SymmetricKeyGenerator.generateSymmetricKey(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding);
 
         SymmetricCipher symmetricCipher =
-                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_NoPadding)
+                SymmetricBuilder.encryption(SymmetricAlgorithm.AES_CBC_128_PKCS5Padding)
                         .loadKey(key)
                         .plaintext(plainText)
                         .encrypt();
