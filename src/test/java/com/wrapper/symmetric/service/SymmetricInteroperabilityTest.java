@@ -1,6 +1,6 @@
 package com.wrapper.symmetric.service;
 
-import com.wrapper.Application;
+import com.wrapper.SafencryptApplication;
 import com.wrapper.symmetric.builder.SymmetricBuilder;
 import com.wrapper.symmetric.builder.SymmetricInteroperableBuilder;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-@SpringBootTest(classes = {Application.class})
+@SpringBootTest(classes = {SafencryptApplication.class})
 class SymmetricInteroperabilityTest {
 
     @Test

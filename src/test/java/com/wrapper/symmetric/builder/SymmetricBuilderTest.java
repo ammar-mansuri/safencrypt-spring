@@ -1,6 +1,6 @@
 package com.wrapper.symmetric.builder;
 
-import com.wrapper.Application;
+import com.wrapper.SafencryptApplication;
 import com.wrapper.symmetric.enums.SymmetricAlgorithm;
 import com.wrapper.symmetric.models.SymmetricCipher;
 import com.wrapper.symmetric.service.SymmetricKeyGenerator;
@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.charset.StandardCharsets;
 
-@SpringBootTest(classes = {Application.class})
+@SpringBootTest(classes = {SafencryptApplication.class})
 class SymmetricBuilderTest {
 
 
